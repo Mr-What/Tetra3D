@@ -9,19 +9,78 @@ use <ext20v.scad>;
 use <ext15ob.scad>;
 
 baseExtLen = 300;
-railTilt = 10.8;  // degrees
+railTilt = 10.34;//10.8;  // degrees
 
 use <nema17.scad>;
 
+baseRailHeight = 60;
+
+//translate([0,-200]) // center lower vertex
+//translate([0,0,-960]) // center apex
 difference() {
   union() {
-    translate([0,140,100]) baseVertex();
-    translate([0,0,960]) apex();
-    translate([0,213,-4]) foot();
+    translate([0,140,baseRailHeight]) baseVertex();
+    translate([0,0,961]) apex();
+    translate([0,204,-5]) foot();
   }
 
-  dilatedExtrusions();  // for cut-outs for extrusions
+  dilatedExtrusions(3);  // for cut-outs for extrusions
 }
+//baseVertexShell();
+
+
+module dilatedExtrusions(verbose=3) {
+  for (a=[-120,0,120]) rotate([0,0,a]) 
+    translate([0,204,0])
+      rotate([railTilt,0,0]) {
+
+        // make a little indent at foot of model to make feet fit better
+        difference() {
+          if (verbose % 2)
+            #ext20v(1000,.1);
+          else
+            ext20v(1000,.1);
+          cube([14,14,1],center=true);
+        }
+
+        // want NEMA face plate 36ish mm from extrusion.
+        // make sure this is carved out
+        hull() {
+          for(x=[-1,1]) translate([25*x,-7.5-36-4,baseRailHeight])
+             cylinder(r=4,h=80,$fn=24,center=true);
+          translate([0,-7.5-36-30,baseRailHeight])
+              cube([90,1,80],center=true);
+        }
+        //%hull() {
+        //  translate([0,-7.5-36-20,100]) cube([50,40,80],center=true);
+        //  translate([0,-7.5-36-30,100]) cube([90,1,80],center=true);
+        //}
+
+        // clear zone for linear motion parts around shaft
+        hull() for(x=[-1,1]) {
+          translate([10*x,-19,baseRailHeight/2-20]) cylinder(r=3,h=100,$fn=24);
+          translate([20*x,-36,baseRailHeight/2-20]) cylinder(r=3,h=100,$fn=24);
+        }
+      }
+
+  for (a=[-90,30,150]) rotate([0,0,a])
+    translate([110,(baseExtLen+1)/2,baseRailHeight])
+      rotate([90,0,0]) difference() {
+        if ((verbose/2) % 2)
+          #ext15(baseExtLen+1,.1);
+        else
+          ext15(baseExtLen+1,.1);
+
+        // cut out ext hallow .5mm too long, but put a little
+        // spacer at the desired position
+        cube([12,12,1],center=true);
+        cylinder(r1=1.1,r2=0.8,h=2,$fn=16);
+        translate([0,0,baseExtLen+1]) cube([12,12,1],center=true);
+        translate([0,0,baseExtLen-1]) cylinder(r1=0.8,r2=1.1,h=2,$fn=16);
+      }
+}
+
+
 
 module foot() {
   //%rotate([0,0,45]) cylinder(r1=20,r2=5,h=20,$fn=4);
@@ -70,7 +129,7 @@ module apex() {
 module baseVertex() difference() {
   baseVertexShell();
 
-  translate([0,11,-16]) rotate([railTilt-90,0,0]) {
+  translate([0,11,-15]) rotate([railTilt-90,0,0]) {
     %scale(1.02) nema17();
     nema17MountHoles();
   }
@@ -141,9 +200,9 @@ zLo=-7.5+cr;//-4;
 
     hull() for(x=[-1,1]) {
       // repeat lower nodes on outside of vertex tip
-      translate([11*x,61,zLo]) sphere(r=cr,$fn=24);
-      translate([30*x,15,-36]) sphere(r=cr,$fn=24);
-      translate([30*x, 4,-4 ]) sphere(r=cr,$fn=24);
+      translate([11*x,60,zLo]) sphere(r=cr,$fn=24);
+      translate([26*x,17,-36]) sphere(r=cr,$fn=24);
+      translate([34*x, 0,-4 ]) sphere(r=cr,$fn=24);
     }
 
     //%hull() {
@@ -172,49 +231,6 @@ module nema17MountHoles() {
 }
 
 
-module dilatedExtrusions() {
-  for (a=[-120,0,120]) rotate([0,0,a]) 
-    translate([0,212,0])
-      rotate([railTilt,0,0]) {
-
-        // make a little indent at foot of model to make feet fit better
-        difference() {
-          #ext20v(1000,.1);
-          cube([14,14,1],center=true);
-        }
-
-        // want NEMA face plate 36ish mm from extrusion.
-        // make sure this is carved out
-        hull() {
-          for(x=[-1,1]) translate([25*x,-7.5-36-4,100])
-             cylinder(r=4,h=80,$fn=24,center=true);
-          translate([0,-7.5-36-30,100]) cube([90,1,80],center=true);
-        }
-        //%hull() {
-        //  translate([0,-7.5-36-20,100]) cube([50,40,80],center=true);
-        //  translate([0,-7.5-36-30,100]) cube([90,1,80],center=true);
-        //}
-
-        // clear zone for linear motion parts around shaft
-        hull() for(x=[-1,1]) {
-          translate([10*x,-19,50]) cylinder(r=3,h=100,$fn=24);
-          translate([20*x,-36,50]) cylinder(r=3,h=100,$fn=24);
-        }
-      }
-
-  for (a=[-90,30,150]) rotate([0,0,a])
-    translate([110,(baseExtLen+1)/2,100])
-      rotate([90,0,0]) difference() {
-        #ext15(baseExtLen+1,.1);
-
-        // cut out ext hallow .5mm too long, but put a little
-        // spacer at the desired position
-        cube([12,12,1],center=true);
-        cylinder(r1=1.1,r2=0.8,h=2,$fn=16);
-        translate([0,0,baseExtLen+1]) cube([12,12,1],center=true);
-        translate([0,0,baseExtLen-1]) cylinder(r1=0.8,r2=1.1,h=2,$fn=16);
-      }
-}
 
 
 m5rad = 4.92/2;//4.88/2;
