@@ -1,6 +1,6 @@
 % line-plot of tetrahedral-delta 3d printer model,
 % with effector at given cartesian point
-function plotTetraCart(tp,q)
+function tet=plotTetraCart(tp,q)
   hold off;
   baseX = [tp.A0(1), tp.B0(1), tp.C0(1), tp.A0(1)];
   baseY = [tp.A0(2), tp.B0(2), tp.C0(2), tp.A0(2)];
@@ -14,7 +14,7 @@ function plotTetraCart(tp,q)
   end
   grid on;axis equal;
   plot3(q(1),q(2),q(3),'.m','MarkerSize',5);
-  tet = cart2tetra(tp,q)
+  tet = cart2tetra(tp,q);
   A1 = tp.A0 + tet(1) * tp.Ahat;
   B1 = tp.B0 + tet(2) * tp.Bhat;
   C1 = tp.C0 + tet(3) * tp.Chat;
@@ -38,5 +38,6 @@ function plotTetraCart(tp,q)
   text(c(1)  ,c(2)-3,c(3),'c');
   title('Tetrahedral 3D printer kinematic model definitions')
   axis([-25 25 -20 20 0 95]);
+  view(340,16);
 end
 
