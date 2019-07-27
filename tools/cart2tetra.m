@@ -1,13 +1,22 @@
 %
 %
 function tet = cart2tetra(tp,xyz)
-  dA = towerDistance(tp.A0,tp.Ahat,tp.rodLen(1),xyz);
-  dB = towerDistance(tp.B0,tp.Bhat,tp.rodLen(2),xyz);
-  dC = towerDistance(tp.C0,tp.Chat,tp.rodLen(3),xyz);
+  [dA,eA] = towerDistance(tp.A0,tp.Ahat,tp.rodLen(1),xyz);
+  [dB,eB] = towerDistance(tp.B0,tp.Bhat,tp.rodLen(2),xyz);
+  [dC,eC] = towerDistance(tp.C0,tp.Chat,tp.rodLen(3),xyz);
   tet = [dA,dB,dC];
+  if (eA*eB*eC <= 0)
+    qq = tetra2cart(tp,tet);    
+    fprintf(2,'ERROR: Outside print envelope [%.2f,%.2f,%.2f]\n\t\t     limit at [%.2f,%.2f,%.2f]\n',xyz,qq);
+    if (qq(3) < 0)
+      qq(3)=0;
+      fprintf(2,'\tbed crash.  limiting to [%.2f,%.2f,%d]\n',qq);
+      tet = cart2tetra(tp,qq);
+    end
+  end
 end
 
-function d = towerDistance(p0,vHat,r,q)
+function [d,disc] = towerDistance(p0,vHat,r,q)
   %x0=p0(1);  % p0 is starting point, where d==0
   %y0=p0(2);
   %z0=p0(3); % should be 0
@@ -36,7 +45,11 @@ function d = towerDistance(p0,vHat,r,q)
   dq = q - p0;
   c = dq * dq' - r*r;
 
-  d = (-b + sqrt(b*b - 4*c))/2;
-  %d = (-b - sqrt(b*b - 4*c))/2;
+  disc = b*b - 4*c;
+  if (disc < 0)
+    disc=0;
+  end
+  d = (-b + sqrt(disc))/2;
+  %d = (-b - sqrt(disc))/2;
 
 end
