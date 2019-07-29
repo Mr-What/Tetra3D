@@ -153,6 +153,10 @@ module baseVertex() difference() {
   for (a=[-1,1])  translate([16.5*a,53,0])
      rotate([0,-90*a,0]) rotate([0,0,a*(90-railTilt)]) M5boltHole();
 
+  // extra holes for tie-downs
+  translate([0,28,-18]) rotate([0,90,0])
+    cylinder(r=4,$fn=6,h=88,center=true);
+
 }
 
 // hole for setting up an 8mm M3 screw to attach to a 1515 extrusion
