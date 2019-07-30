@@ -1,4 +1,4 @@
-use <ext20v.scad>;
+use <ext20.scad>;
 //cube([10,10,10]);
 
 // openbeam sells 1515 extrusions in 270length (and others).
@@ -37,9 +37,9 @@ module dilatedExtrusions(verbose=3) {
         // make a little indent at foot of model to make feet fit better
         difference() {
           if (verbose % 2)
-            #ext20v(1000,.1);
+            #ext20(1000,.2);
           else
-            ext20v(1000,.1);
+            ext20(1000,.2);
           cube([14,14,1],center=true);
         }
 
