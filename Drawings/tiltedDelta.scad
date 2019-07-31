@@ -8,6 +8,8 @@ use <ext20.scad>;
 // use the OpenBeam model, ext15ob.scad until I add that.
 use <ext15ob.scad>;
 
+extFuzz=0.18;  // extra padding to put around extrusion cut-outs
+
 baseExtLen = 300;
 railTilt = 10.34;//10.8;  // degrees
 
@@ -20,11 +22,11 @@ baseRailHeight = 60;
 difference() {
   union() {
     translate([0,140,baseRailHeight]) baseVertex();
-    translate([0,0,961]) apex();
-    translate([0,204,-5]) foot();
+    //translate([0,0,961]) apex();
+    //translate([0,204,-5]) foot();
   }
 
-  dilatedExtrusions(3);  // for cut-outs for extrusions
+  dilatedExtrusions(0);  // for cut-outs for extrusions
 }
 //baseVertexShell();
 
@@ -37,9 +39,9 @@ module dilatedExtrusions(verbose=3) {
         // make a little indent at foot of model to make feet fit better
         difference() {
           if (verbose % 2)
-            #ext20(1000,.2);
+            #ext20(1000,extFuzz);
           else
-            ext20(1000,.2);
+            ext20(1000,extFuzz);
           cube([14,14,1],center=true);
         }
 
@@ -67,9 +69,9 @@ module dilatedExtrusions(verbose=3) {
     translate([110,(baseExtLen+1)/2,baseRailHeight])
       rotate([90,0,0]) difference() {
         if ((verbose/2) % 2)
-          #ext15(baseExtLen+1,.1);
+          #ext15(baseExtLen+1,extFuzz);
         else
-          ext15(baseExtLen+1,.1);
+          ext15(baseExtLen+1,extFuzz);
 
         // cut out ext hallow .5mm too long, but put a little
         // spacer at the desired position
@@ -103,12 +105,14 @@ module apex() {
     // remove outside slot residual, and (most of) side rails
     for (a=[-120,0,120]) rotate([0,0,a]) 
       translate([0,30, 0]) 
-        rotate([railTilt,0,0]) cube([19.6,16,50],center=true);
+        rotate([railTilt,0,0])
+          cube([17,18,50],center=true);
+          //cube([19.6,16,50],center=true);
 
     // side bolt holes
     for (a=[-120,0,120]) rotate([0,0,a]) for(x=[-1,1])
       translate([15*x,27.1,8.6]) 
-        rotate([0,-90*x,0]) rotate([0,0,90]) M5boltHole(.15);
+        rotate([0,-90*x,0]) rotate([0,0,90-x*railTilt]) M5boltHole(.15);
 
     // inside bolt holes
     for (a=[-120,0,120]) rotate([0,0,a])
