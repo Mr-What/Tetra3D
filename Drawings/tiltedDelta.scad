@@ -17,13 +17,13 @@ use <nema17.scad>;
 
 baseRailHeight = 60;
 
-//translate([0,-200]) // center lower vertex
+translate([0,-200]) // center lower vertex
 //translate([0,0,-960]) // center apex
 difference() {
   union() {
     translate([0,140,baseRailHeight]) baseVertex();
-    translate([0,0,964]) apex();
-    translate([0,204,-5]) foot();
+    //translate([0,0,964]) apex();
+    //translate([0,204,-5]) foot();
   }
 
   dilatedExtrusions(3);  // for cut-outs for extrusions
@@ -156,7 +156,7 @@ module baseVertex() difference() {
 
   // remove outside of vertical rail strip
   translate([0,58,0]) rotate([railTilt,0,0]) 
-       cube([16,25,20],center=true);
+       cube([16,25,50],center=true);
 
   railZone();
   mirror([1,0,0]) railZone();
