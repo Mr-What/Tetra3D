@@ -1,14 +1,15 @@
 // cut-out model to fit 20mm extrusion
 
-//ext20profile(-0.1);
-ext20(50,0.2);
+ext20(10,0.12);
+%translate([0,0,-.1]) ext20(30.2,0);
+translate([0,0,20])ext20(10,-0.12);
 
 module ext20(len,fuzz=0,verbose=0) {
   if (fuzz == 0)
     linear_extrude(len) ext20profile();
   else if (fuzz > 0)
     linear_extrude(len) minkowski() {
-      ext20profile(fuzz);
+      ext20profile(fuzz,1.5*fuzz);
       circle(r=fuzz/2,$fn=12);
     }
   else linear_extrude(len) difference() {
@@ -16,7 +17,7 @@ module ext20(len,fuzz=0,verbose=0) {
     minkowski() {
       difference() {
         square([21,21],center=true);
-        ext20profile(fuzz);
+        ext20profile(fuzz,-1.5*fuzz);
       }
       circle(r=-fuzz/2,$fn=12);
     }
@@ -63,19 +64,21 @@ innerBoreRadius = 3.55/2;
 
         for (a=[0:90:355]) rotate(a)
           hull() {
-            translate([w/2+2,0]) square([1,slot],center=true);
-            translate([innerSquare/2+slot/2,0]) circle(r=slot/2-1,$fn=24);
+            translate([w/2,0]) square([.5,slot],center=true);
+            for(y=[-1,1])
+              translate([innerSquare/2+slot/2+1.9,y*(slot/2-1)])
+                circle(0.7,$fn=36);
           }
       }
     //square([innerSquare,innerSquare],center=true);
 
       if(fuzz != 0) { // add extra corner relief for cutouts
         for (a=[0:90:355]) rotate(a) {
-          translate([w/2-crr*.2,w/2-crr*.2])
-            circle(r=crr*.6,$fn=11);
+          translate([w/2-crr*.6,w/2-crr*.6])
+            circle(r=crr,$fn=11);
 
           for (y=[-1,1])
-            translate([w/2-crr*.7,y*(slot/2-crr*.3)])
+            translate([w/2-crr*.7,y*(slot/2+crr*0.8)])
               circle(r=crr,$fn=11);
         }
       }
@@ -83,27 +86,3 @@ innerBoreRadius = 3.55/2;
     }
   }
 }
-
-/*
-module ext20profile(kerf=0,verbose=0) {
-w=20;
-w2f = w/2 - 0.6*abs(kerf);  // offset to center of corner stress relief loop
-rc = (abs(kerf) < 0.1) ? 0.2 : 2*abs(kerf);  // radius of corner releif loop
-ro=1;
-$fn=24;
-  difference() {
-    union() {
-      square([w,w],center=true);
-      if (kerf > 0) // extra clearance around corners
-        for(i=[-1,1]) for(j=[-1,1]) // extra clearance around corners
-          translate([w2f*i,w2f*j,0]) circle(r=rc,$fn=8);
-    }
-
-    for (a=[0:90:355]) {
-       rotate([0,0,a])
-          slotV20profile();
-    }
-    if (floor(verbose/2) % 2) circle(r=2);
-  }
-}
-*/
