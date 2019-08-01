@@ -1,12 +1,12 @@
 use <ext20.scad>;
-//cube([10,10,10]);
 
 // openbeam sells 1515 extrusions in 270length (and others).
 // I think I got misumi at 300, but they are selectable.
 
 // the simple drawing, ext15.scad has no fuzz, so I'll
 // use the OpenBeam model, ext15ob.scad until I add that.
-use <ext15ob.scad>;
+//use <ext15ob.scad>;
+use <ext15m.scad>;  // Mistumi 1515 extrusion profile
 
 extFuzz=0.1;  // extra padding to put around extrusion cut-outs
 
@@ -17,13 +17,13 @@ use <nema17.scad>;
 
 baseRailHeight = 60;
 
-translate([0,-200]) // center lower vertex
+//translate([0,-200]) // center lower vertex
 //translate([0,0,-960]) // center apex
 difference() {
   union() {
     translate([0,140,baseRailHeight]) baseVertex();
-    //translate([0,0,964]) apex();
-    //translate([0,204,-5]) foot();
+    translate([0,0,964]) apex();
+    translate([0,204,-5]) foot();
   }
 
   dilatedExtrusions(3);  // for cut-outs for extrusions
@@ -90,11 +90,9 @@ module dilatedExtrusions(verbose=3) {
 
 
 module foot() {
-  //%rotate([0,0,45]) cylinder(r1=20,r2=5,h=20,$fn=4);
-  hull() {
-    for(x=[-1,1]) for(y=[-1,1])
-      translate([12*x,12*y,2]) sphere(2,$fn=24);
-    translate([0,-1.2,13]) scale([12,12,3]) sphere(1,$fn=36);
+  hull() for(x=[-1,1]) for(y=[-1,1]) {
+     translate([12*x,12*y,2]) sphere(2,$fn=24);
+     translate([9*x,9*y-1,9]) sphere(4,$fn=24);
   }
 }
 
@@ -190,10 +188,7 @@ nutRad = 5.46/2/cos(30);
 // get rid of extranious junk around rails on vertex
 module railZone() {
   translate([-47,1.5,0]) rotate([0,0,-30]) {
-    //hull() {
-      cube([12,100,16],center=true);
-      //translate([-10,30,-40]) cube(1);
-    //}
+    cube([12,100,16],center=true);
     hull() {
       translate([-10,20,-30]) sphere(8,$fn=22);
       translate([4,0,-5]) cube([9,100,5],center=true);
