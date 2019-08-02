@@ -37,7 +37,8 @@ function tet=plotTetraCart(tp,q)
   text(b(1)+3,b(2)  ,b(3),'b');
   text(c(1)  ,c(2)-3,c(3),'c');
   title('Tetrahedral 3D printer kinematic model definitions')
-  axis([-25 25 -20 20 0 95]);
+  %axis([-25 25 -20 20 0 95]);
+  axis([tp.A0(1),tp.B0(1),tp.A0(2),tp.C0(2),0,tp.Apex(3)] .* [1.2,1.2,1.4,1.2,1,1.05]);
   view(340,16);
 end
 
