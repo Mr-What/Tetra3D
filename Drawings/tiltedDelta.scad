@@ -19,15 +19,15 @@ use <nema17.scad>;
 baseRailHeight = 60;
 
 //translate([0,-0.5*baseExtLen]) {// center lower vertex
-//translate([0,0,-960]) // center apex
+translate([0,0,-960]) // center apex
 difference() {
   union() {
-    translate([0,0.47*baseExtLen,baseRailHeight]) baseVertex();
+    //translate([0,0.47*baseExtLen,baseRailHeight]) baseVertex();
     translate([0,0,towerExtLen*cos(railTilt)-21]) apex();
-    translate([0,0.68*baseExtLen,-5]) foot();
+    //translate([0,0.68*baseExtLen,-5]) foot();
   }
 
-  dilatedExtrusions(3);  // for cut-outs for extrusions
+  dilatedExtrusions(0);  // for cut-outs for extrusions
 }
 
 // extra supports for printing vertex
@@ -129,12 +129,16 @@ module apex() {
 
     // center cut-out
     //%translate([0,0,-4]) cylinder(r1=28,r2=24,h=24,$fn=6);
-    translate([0,0,-5]) linear_extrude(30,scale=0.67) 
-       roundedTri(20,5);
-    translate([0,0,-4]) linear_extrude(4,scale=0.7) 
-       roundedTri(32,3);
+    //#translate([0,0,-5]) linear_extrude(30,scale=1.3) 
+    //   roundedTri(15,5);
+    hull() {
+      translate([0,0,-5]) linear_extrude(1) rotate(60) roundedTriHex(16,3,4);
+      translate([0,0,20]) linear_extrude(1) roundedTri(18,1);
+    }
+    translate([0,0,-3]) linear_extrude(4,scale=0.8) 
+       roundedTriHex(14,16,3);
     translate([0,0,15]) linear_extrude(4,scale=1.5) 
-       roundedTri(12,3);
+       roundedTri(15,2);
     //#for(a=[0:120:355]) rotate(a) for(x=[-1,1])
     //  translate([x*17,22,-5])
     //    cylinder(r1=3,r2=2,h=30,$fn=6);
@@ -144,7 +148,7 @@ module apex() {
 }
 
 module roundedTriHex(dy,dx,rc) hull() 
-  //for(a=[0:120:355]) rotate(a)
+  for(a=[0:120:355]) rotate(a)
     for(x=[-1,1]) translate([x*dx,dy]) circle(rc,$fn=36);
 
 module roundedTri(dx,rc) hull() 
