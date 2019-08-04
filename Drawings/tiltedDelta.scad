@@ -6,7 +6,7 @@ use <ext20.scad>;
 // the simple drawing, ext15.scad has no fuzz, so I'll
 // use the OpenBeam model, ext15ob.scad until I add that.
 //use <ext15ob.scad>;
-use <ext15m.scad>;  // Mistumi 1515 extrusion profile
+use <ext15m.scad>;  // Misumi 1515 extrusion profile
 
 extFuzz=0.1;  // extra padding to put around extrusion cut-outs
 
@@ -18,7 +18,7 @@ use <nema17.scad>;
 
 baseRailHeight = 60;
 
-//translate([0,-0.5*baseExtLen]) //{// center lower vertex
+//translate([0,-0.5*baseExtLen]) {// center lower vertex
 //translate([0,0,-960]) // center apex
 difference() {
   union() {
@@ -31,7 +31,7 @@ difference() {
 }
 
 // extra supports for printing vertex
-//translate([0,0.47*baseExtLen,baseRailHeight]) vertexSupports();}
+//translate([0,0.47*baseExtLen,baseRailHeight]) color([.2,.3,.8,.4]) vertexSupports();}
 
 
 
@@ -54,8 +54,8 @@ module dilatedExtrusions(verbose=3) {
         hull() {
           for(x=[-1,1]) translate([25*x,-7.5-36-4,baseRailHeight])
              cylinder(r=4,h=80,$fn=24,center=true);
-          translate([0,-7.5-36-30,baseRailHeight])
-              cube([90,1,80],center=true);
+          translate([0,-7.5-36-36,baseRailHeight])
+              cube([97,.1,80],center=true);
         }
 
         // clear zone for linear motion parts around shaft
@@ -147,10 +147,12 @@ module apex() {
 
 
 // add some manual supports to baseVertex() for printing
-module vertexSupports() color([.2,.3,.8,.4]) {
+module vertexSupports() {
+dr=0; // moves ridge support rail towards/away from tower
 
-  for (a=[-1,1]) translate([a*32.3,23.6,2.3]) rotate([0,0,30*a])
-     cube([2,61,.5],center=true);
+  for (a=[-1,1]) translate([a*(dr*sin(30)+35.7),-cos(30)*dr+18,2.3])
+     rotate([0,0,30*a])
+       cube([2,74,.5],center=true);
 
   translate([0,28,-14]) rotate([90,0,0]) difference() {
      cylinder(r=11.5,h=5,$fn=36,center=true);
@@ -177,16 +179,17 @@ module baseVertex() difference() {
   mirror([1,0,0]) railZone();
 
   for (a=[-1,1]) {
-    translate([39*a,2,0]) rotate([0,0,-90-a*60])
+    translate([45.1*a,-9,0]) rotate([0,0,-90-a*60])
       rotate([0,90,0]) M3railHole(8);
     translate([17*a,40,0]) rotate([0,0,-90-a*60])
       rotate([0,90,0]) M3railHole(8);
   }
 
-  // inside 20v mount screw
+  // inside 20 t-slot screw
   //translate([0,56,-5])
   //translate([0,57.4,-9])
-  translate([0,57.7,-14])
+  //translate([0,57.7,-14])
+  translate([0,58.8,-18])
     rotate([90+railTilt,0,0]) M5rail20hole(3.5,.15);
 
   for (a=[-1,1]) translate([9.8*a,64.9,0])
@@ -221,22 +224,16 @@ zLo=-7.5+cr;//-4;
     hull() {
       for(x=[-1,1]) {
         translate([12*x,71.8,zHi]) sphere(r=cr,$fn=24);
-        //translate([11*x,74.4,zLo]) sphere(r=cr,$fn=24);
         translate([12*x,77.1,zLo-12]) sphere(r=cr,$fn=24);
 
         for(z=[zLo,zHi]) translate([27*x,56,z]) sphere(r=cr,$fn=24);
-        for(z=[zLo,zHi]) translate([44*x,-2,z]) sphere(r=cr,$fn=24);
+        for(z=[zLo,zHi]) translate([52*x,-12,z]) sphere(r=cr,$fn=24);
 
         // extra bump to keep central rail ridge
-        translate([48*x,-1,0]) sphere(r=cr,$fn=24);
-      //}
-    //}
+        translate([52*x,-12,0]) sphere(r=cr,$fn=24);
 
-    //hull() for(x=[-1,1]) {
-      // repeat lower nodes on outside of vertex tip
-      //translate([11*x,74.4,zLo]) sphere(r=cr,$fn=24);
-      translate([26*x,29,-34]) sphere(r=cr,$fn=24);
-      //translate([44*x, 0,-4 ]) sphere(r=cr,$fn=24);
+        // bottom level for step motor mount
+        translate([26*x,29,-34]) sphere(r=cr,$fn=24);
       }
     }
   }
