@@ -18,28 +18,22 @@ use <nema17.scad>;
 
 baseRailHeight = 60;
 
-//translate([0,-0.5*baseExtLen]) {// center lower vertex
-translate([0,0,-960]) // center apex
+//translate([0,-0.5*baseExtLen]) //{// center lower vertex
+//translate([0,0,-960]) // center apex
 difference() {
   union() {
-    //translate([0,0.47*baseExtLen,baseRailHeight]) baseVertex();
+    translate([0,0.47*baseExtLen,baseRailHeight]) baseVertex();
     translate([0,0,towerExtLen*cos(railTilt)-21]) apex();
-    //translate([0,0.68*baseExtLen,-5]) foot();
+    translate([0,0.68*baseExtLen,-5]) foot();
   }
 
-  dilatedExtrusions(0);  // for cut-outs for extrusions
+  dilatedExtrusions(3);  // for cut-outs for extrusions
 }
 
 // extra supports for printing vertex
 //translate([0,0.47*baseExtLen,baseRailHeight]) vertexSupports();}
 
-//baseVertexShell();
-//translate([50,0]) M3railHole();  // for 15mm extrusion, uses regular nut
-//translate([30,0]) M3screwHole();
-//translate([0,20]) M5boltHole(0.1,3);
-//translate([0,20,20]) rotate([180,0,0]) %Tnut20();
-//translate([0,-20]) M3rail20hole();  // using slider t-nut on 20mm extrusion
-//M5rail20hole();  // using slider t-nut on 20mm extrusion
+
 
 module dilatedExtrusions(verbose=3) {
   for (a=[-120,0,120]) rotate([0,0,a]) 
@@ -97,6 +91,8 @@ module foot() {
   }
 }
 
+//------------------------------------------------------------- apex
+
 module apex() {
   difference() {
     hull() for (a=[-120,0,120]) rotate([0,0,a]) for(x=[-1,1]) { 
@@ -147,33 +143,21 @@ module apex() {
   }
 }
 
-module roundedTriHex(dy,dx,rc) hull() 
-  for(a=[0:120:355]) rotate(a)
-    for(x=[-1,1]) translate([x*dx,dy]) circle(rc,$fn=36);
+//----------------------------------------------------------vertex
 
-module roundedTri(dx,rc) hull() 
-  for(a=[30:120:355]) rotate(a)
-    translate([dx,0]) circle(rc,$fn=36);
-
-//%scale(1.02) nema17();
-//nema17MountHoles();
 
 // add some manual supports to baseVertex() for printing
 module vertexSupports() color([.2,.3,.8,.4]) {
 
-  //color([1,0,0]) {
-    for (a=[-1,1]) translate([a*31.2,25.8,2.4]) rotate([0,0,30*a])
-      //hull() {
-        cube([2,55,.5],center=true);
-      //  translate([0,0,5.25]) cube([.6,45,.1],center=true);
-      //}
-    translate([0,28,-14])
-      rotate([90,0,0]) difference() {
-        cylinder(r=11,h=5,$fn=36,center=true);
-        cylinder(r=10.5,h=6,$fn=36,center=true);
-        translate([0,3,0]) cube([24,20,6],center=true);
-      }
-  //}
+  for (a=[-1,1]) translate([a*32.3,23.6,2.3]) rotate([0,0,30*a])
+     cube([2,61,.5],center=true);
+
+  translate([0,28,-14]) rotate([90,0,0]) difference() {
+     cylinder(r=11.5,h=5,$fn=36,center=true);
+
+     cylinder(r=11,h=6,$fn=36,center=true);
+     translate([0,1.5,0]) cube([24,22,8],center=true);
+  }
 }
 
 // shave off some odities from main vertex and drill holes
@@ -200,8 +184,10 @@ module baseVertex() difference() {
   }
 
   // inside 20v mount screw
-  translate([0,56,-5])
-    rotate([90+railTilt,0,0]) M5rail20hole(4,.15);
+  //translate([0,56,-5])
+  //translate([0,57.4,-9])
+  translate([0,57.7,-14])
+    rotate([90+railTilt,0,0]) M5rail20hole(3.5,.15);
 
   for (a=[-1,1]) translate([9.8*a,64.9,0])
      rotate([0,90*a,0]) rotate([0,0,a*railTilt]) M3rail20hole(5,.15);
@@ -215,21 +201,13 @@ module baseVertex() difference() {
   //translate([-100,-100,-50]) cube([100,200,100]);
 }
 
-// hole for setting up an 8mm M3 screw to attach to a 1515 extrusion
-module M3railHole() {
-nutRad = 5.46/2/cos(30);
-  M3screwHole(8);
-  translate([0,0,-8.8]) rotate([0,0,30])
-    cylinder(r1=nutRad+.2,r2=nutRad,h=4,$fn=6);
-}
-
 // get rid of extranious junk around rails on vertex
 module railZone() {
   translate([-49.5,9,0]) rotate([0,0,-30]) {
     cube([12,100,16],center=true);
     hull() {
-      translate([-10,20,-30]) sphere(8,$fn=22);
-      translate([4,0,-5]) cube([9,100,5],center=true);
+      translate([-12,35,-25]) cylinder(r=8,h=1,$fn=22);
+      translate([0,1.7,-7.55]) cube([9+8,100,.1],center=true);
     }
   }
 }
@@ -242,21 +220,47 @@ zLo=-7.5+cr;//-4;
 
     hull() {
       for(x=[-1,1]) {
-        translate([11*x,71.8,zHi]) sphere(r=cr,$fn=24);
-        translate([11*x,74.4,zLo]) sphere(r=cr,$fn=24);
+        translate([12*x,71.8,zHi]) sphere(r=cr,$fn=24);
+        //translate([11*x,74.4,zLo]) sphere(r=cr,$fn=24);
+        translate([12*x,77.1,zLo-12]) sphere(r=cr,$fn=24);
 
         for(z=[zLo,zHi]) translate([27*x,56,z]) sphere(r=cr,$fn=24);
         for(z=[zLo,zHi]) translate([44*x,-2,z]) sphere(r=cr,$fn=24);
+
+        // extra bump to keep central rail ridge
+        translate([48*x,-1,0]) sphere(r=cr,$fn=24);
+      //}
+    //}
+
+    //hull() for(x=[-1,1]) {
+      // repeat lower nodes on outside of vertex tip
+      //translate([11*x,74.4,zLo]) sphere(r=cr,$fn=24);
+      translate([26*x,29,-34]) sphere(r=cr,$fn=24);
+      //translate([44*x, 0,-4 ]) sphere(r=cr,$fn=24);
       }
     }
-
-    hull() for(x=[-1,1]) {
-      // repeat lower nodes on outside of vertex tip
-      translate([11*x,74.4,zLo]) sphere(r=cr,$fn=24);
-      translate([26*x,29,-34]) sphere(r=cr,$fn=24);
-      translate([44*x, 0,-4 ]) sphere(r=cr,$fn=24);
-    }
   }
+}
+
+//----------------------------------------------------------util
+
+module roundedTriHex(dy,dx,rc) hull() 
+  for(a=[0:120:355]) rotate(a)
+    for(x=[-1,1]) translate([x*dx,dy]) circle(rc,$fn=36);
+
+module roundedTri(dx,rc) hull() 
+  for(a=[30:120:355]) rotate(a)
+    translate([dx,0]) circle(rc,$fn=36);
+
+//%scale(1.02) nema17();
+//nema17MountHoles();
+
+// hole for setting up an 8mm M3 screw to attach to a 1515 extrusion
+module M3railHole() {
+nutRad = 5.46/2/cos(30);
+  M3screwHole(8);
+  translate([0,0,-8.8]) rotate([0,0,30])
+    cylinder(r1=nutRad+.2,r2=nutRad,h=4,$fn=6);
 }
 
 module M3screwHole(holeDepth=10,sinkHeight=4,fuzz=0.05) {
@@ -274,8 +278,6 @@ module nema17MountHoles() {
       cylinder(r=2.94/2+.1, h=20, $fn=11,center=true);
   }
 }
-
-
 
 
 m5rad = 4.92/2;//4.88/2;
