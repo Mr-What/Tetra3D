@@ -18,7 +18,7 @@ use <nema17.scad>;
 
 baseRailHeight = 60;
 
-//translate([0,-0.5*baseExtLen]) {// center lower vertex
+//translate([0,-0.5*baseExtLen]) //{// center lower vertex
 //translate([0,0,-960]) // center apex
 difference() {
   union() {
@@ -33,7 +33,18 @@ difference() {
 // extra supports for printing vertex
 //translate([0,0.47*baseExtLen,baseRailHeight]) color([.2,.3,.8,.4]) vertexSupports();}
 
+// show height above table
+towerEdgeBelow0 = sin(railTilt)*10;  // tip of tower goes below z=0
+railTopToTableTop = baseRailHeight+towerEdgeBelow0+7.5;
+echo("Top of base rail to table top (no foot) ",railTopToTableTop);
+//%translate([-100,-80,-towerEdgeBelow0]) cube([200,10,railTopToTableTop]);
 
+
+
+// disgnostic.  From lowest tip of tower, to where
+// inside edge of tower meets top plane of vertex
+vertexTop2tableTop=60/cos(railTilt)+towerEdgeBelow0+7.5/cos(railTilt);
+echo("VertexTop to lowest tower edge ",vertexTop2tableTop);
 
 module dilatedExtrusions(verbose=3) {
   for (a=[-120,0,120]) rotate([0,0,a]) 
@@ -48,6 +59,11 @@ module dilatedExtrusions(verbose=3) {
             ext20(1000,extFuzz);
           cube([14,14,1],center=true);
         }
+
+        // diagnostic to show distance from vertex top
+        // to lower edge of tower leg
+        *%translate([0,-10/cos(railTilt),vertexTop2tableTop/2])
+            cube([80,30,vertexTop2tableTop],center=true);
 
         // want NEMA face plate 36ish mm from extrusion.
         // make sure this is carved out
@@ -69,15 +85,15 @@ module dilatedExtrusions(verbose=3) {
     translate([.36*baseExtLen,(baseExtLen+1)/2,baseRailHeight])
       rotate([90,0,0]) difference() {
         if (floor(verbose/2) % 2)
-          #ext15(baseExtLen+1,extFuzz);
+          #ext15(baseExtLen+.6,extFuzz);
         else
-          ext15(baseExtLen+1,extFuzz);
+          ext15(baseExtLen+.6,extFuzz);
 
-        // cut out ext hallow .5mm too long, but put a little
+        // cut out ext hallow .3mm too long, but put a little
         // spacer at the desired position
-        cube([12,12,1],center=true);
+        cube([12,12,.6],center=true);
         cylinder(r1=1.1,r2=0.8,h=2,$fn=16);
-        translate([0,0,baseExtLen+1]) cube([12,12,1],center=true);
+        translate([0,0,baseExtLen+.3]) cube([12,12,.6],center=true);
         translate([0,0,baseExtLen-1]) cylinder(r1=0.8,r2=1.1,h=2,$fn=16);
       }
 }
@@ -162,6 +178,7 @@ dr=0; // moves ridge support rail towards/away from tower
   }
 }
 
+
 // shave off some odities from main vertex and drill holes
 module baseVertex() difference() {
   baseVertexShell();
@@ -173,7 +190,7 @@ module baseVertex() difference() {
 
   // remove outside of vertical rail strip
   translate([0,70,0]) rotate([railTilt,0,0]) 
-       cube([16,25,50],center=true);
+       cube([16.6,25.6,50],center=true);
 
   railZone();
   mirror([1,0,0]) railZone();
@@ -195,11 +212,28 @@ module baseVertex() difference() {
   for (a=[-1,1]) translate([9.8*a,64.9,0])
      rotate([0,90*a,0]) rotate([0,0,a*railTilt]) M3rail20hole(5,.15);
 
+  // nut insertion holes
+  translate([21.1,56,7.5-3.8]) rotate([0,0,60]) hull() {
+      cylinder(r1=3,r2=3.5,h=4,$fn=6);
+      rotate([0,0,-30]) translate([-3,-6,0]) cube([6,1,4]);
+  }
+  translate([-24.3,57,0]) rotate([0,-90,-30]) hull() {
+      rotate([0,0,30]) cylinder(r1=3,r2=3.5,h=4,$fn=6);
+      translate([-3,-6,0]) cube([6,1,4]);
+  }
+
   // extra holes for tie-downs
-  translate([0,38,-19]) rotate([0,90,0])
-    cylinder(r=4,$fn=6,h=88,center=true);
-  translate([0,17,-14]) rotate([0,90,0])
-    cylinder(r=3,$fn=6,h=88,center=true);
+  //%translate([0,38,-19]) rotate([0,90,0])
+  //  cylinder(r=4,$fn=6,h=88,center=true);
+  for (a=[-1,1]) translate([25*a,40,-14]) rotate([0,90,30*a])
+     intersection() { 
+       cylinder(r=6.5,h=22,$fn=12,center=true);
+       bevilThroughHole(4,14);
+    }
+  //%translate([0,17,-14]) rotate([0,90,0])
+  //  cylinder(r=3,$fn=6,h=88,center=true);
+  for (a=[-1,1]) translate([36*a,15,-14]) rotate([0,90,30*a])
+    scale([1,1,2])bevilThroughHole(3,5.3);
 
   //translate([-100,-100,-50]) cube([100,200,100]);
 }
@@ -240,6 +274,14 @@ zLo=-7.5+cr;//-4;
 }
 
 //----------------------------------------------------------util
+
+module bevilHole(nf=48) rotate_extrude($fn=nf) bevilProfile();
+module bevilThroughHole(r=3,h=10) union() {
+  mirror([0,0,1])
+    translate([0,0,-h/2]) scale(r,r,h) bevilHole();
+    translate([0,0,-h/2]) scale(r,r,h) bevilHole();
+  cylinder(r=r,$fn=48,center=true,h=h+1);
+}
 
 module roundedTriHex(dy,dx,rc) hull() 
   for(a=[0:120:355]) rotate(a)
@@ -336,3 +378,22 @@ module Tnut20() union() {
     translate([0,0,-2-.5])   cube([10,10,1],center=true);
   }
 }
+
+module bevilProfile() polygon( points = [
+[2,-0.05],
+ [1.826352  , 0.015192],
+  [ 1.741181 ,  0.034074],
+  [ 1.657980 ,  0.060307],
+  [ 1.577382 ,  0.093692],
+  [ 1.500000 ,  0.133975],
+  [ 1.426424 ,  0.180848],
+  [ 1.357212 ,  0.233956],
+  [ 1.292893 ,  0.292893],
+  [ 1.233956 ,  0.357212],
+  [ 1.180848 ,  0.426424],
+  [ 1.133975 ,  0.500000],
+  [ 1.093692 ,  0.577382],
+  [ 1.060307 ,  0.657980],
+  [ 1.034074 ,  0.741181],
+  [ 1.015192 ,  0.826352],
+[0.96,1.1],[.5,1.1],[.5,-0.05],[0.96,-0.05]]);
