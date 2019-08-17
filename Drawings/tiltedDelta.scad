@@ -30,7 +30,7 @@ difference() {
   dilatedExtrusions(3);  // for cut-outs for extrusions
 }
 
-// extra supports for printing vertex
+// extra supports for printing vertex (not needed with newer cura)
 //translate([0,0.47*baseExtLen,baseRailHeight]) color([.2,.3,.8,.4]) vertexSupports();}
 
 // show height above table
@@ -213,27 +213,30 @@ module baseVertex() difference() {
      rotate([0,90*a,0]) rotate([0,0,a*railTilt]) M3rail20hole(5,.15);
 
   // nut insertion holes
-  translate([21.1,56,7.5-3.8]) rotate([0,0,60]) hull() {
-      cylinder(r1=3,r2=3.5,h=4,$fn=6);
-      rotate([0,0,-30]) translate([-3,-6,0]) cube([6,1,4]);
-  }
-  translate([-24.3,57,0]) rotate([0,-90,-30]) hull() {
-      rotate([0,0,30]) cylinder(r1=3,r2=3.5,h=4,$fn=6);
-      translate([-3,-6,0]) cube([6,1,4]);
-  }
+  translate([21.1+sin(30)*3,56-cos(30)*3,7.5-2]) rotate([0,0,30]) 
+      cube([6.5,12,4],center=true);
+  translate([-27,56,0]) 
+     rotate([0,0,-30]) cube([4,12,6.5],center=true);
 
   // extra holes for tie-downs
   //%translate([0,38,-19]) rotate([0,90,0])
   //  cylinder(r=4,$fn=6,h=88,center=true);
-  for (a=[-1,1]) translate([25*a,40,-14]) rotate([0,90,30*a])
+  *for (a=[-1,1]) translate([25*a,40,-14]) rotate([0,90,30*a])
+     intersection() { 
+       cylinder(r=6.5,h=22,$fn=12,center=true);
+       bevilThroughHole(4,14);
+    }
+  for (a=[-1,1]) translate([24*a,43,-21]) rotate([0,90,30*a])
      intersection() { 
        cylinder(r=6.5,h=22,$fn=12,center=true);
        bevilThroughHole(4,14);
     }
   //%translate([0,17,-14]) rotate([0,90,0])
   //  cylinder(r=3,$fn=6,h=88,center=true);
-  for (a=[-1,1]) translate([36*a,15,-14]) rotate([0,90,30*a])
+  *for (a=[-1,1]) translate([36*a,15,-14]) rotate([0,90,30*a])
     scale([1,1,2])bevilThroughHole(3,5.3);
+  for (a=[-1,1]) translate([35.5*a,18,-20]) rotate([0,90,30*a])
+    scale([1,1,2])bevilThroughHole(3,4.5);
 
   //translate([-100,-100,-50]) cube([100,200,100]);
 }
