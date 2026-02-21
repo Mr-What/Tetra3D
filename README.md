@@ -1,16 +1,17 @@
 # Tetra3D
 Tetrahedral 3D printer
 
-Initial model was based off of definition of length of base edges, and tower arm lengths.
-From this information, the location of an Apex point could be solved.
-However, It seemed more natural for me to simply use the Apex location as an independent variable.
-With the assertion that the coordinate origin would be at the y-centroid, all other parameters
-are trivial to solve for.
-Either way, we have a 12 parameter initial kinematic model:
-    (3) base lengths
-    (3) tower lengths XOR Apex position definition
-    (3) rod lengths
-    (3) endstop offsets for tower servos (implied)
+Ideal model has all base legs the same length, where the virtual "axis of action" of the three
+towers meet at a single apex point.  Ideal model would have only 3 parameters, base length, arm length, and apex height.
+
+The current model as implemented, can have a real dimensionality of 12.  Base lengths (3), tower angles (6), arm lengths(3).
+We coded tower angles as 3 R3 direction vectors, but one element is redundant so the actual dimensionality is 2 for each tower.
+For an actual 3D printer, we need 3 more parameters, the endstop offset on tower servos.
+Total parameter dimensionality is 15.
+
+If optimizing a 15 dimensional model for autocalibration from bed probes does not converge,
+we can start constraining some parameters, like assuming all arm lengths are equal, 
+or that all tower motion lines intersect at a single apex point.
 
 Kinematics are solved using direction unit vectors for the towers, [Ahat;Bhat;Chat],
 which need not meet the constraint that they meet at an Apex.
