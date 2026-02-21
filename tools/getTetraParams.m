@@ -67,18 +67,32 @@
 %  Do not define A,B,C, but let user define Apex point
 function tp=getTetraParams(p0)
     tp=struct();
-    if isfield(p0,"sideLen")
-        tp.p = p0;  % parameters provided in general form
-    end
-    if isfield(p0,"A")
+    if isfield(p0,"A") || isfield(p0,"W")
         % parameters in gcode form
         p.Z = p0.Z;
-        p.sideLen = [p0.A, p0.B, p0.C];
-        p.armLen  = [p0.D, p0.E, p0.F];
-        p.Zxy = [ p0.G, p0.H ; ...
-                  p0.I, p0.J ; ...
-                  p0.K, p0.L];
-        tp.p = p;
+        tp.gcode = p0;
+        if isfield(p0,"W")
+            p.sideLen = zeros(1,3) + p0.W;
+        else
+            p.sideLen = [p0.A, p0.B, p0.C];
+        end
+        if isfield(p0,"R")
+            p.armLen = zeros(1,3) + p0.R;
+        else
+            p.armLen  = [p0.D, p0.E, p0.F];
+        end
+        p.Zxy = zeros(3,2);
+        if isfield(p0,'G'), p.Zxy(1,1) = p0.G; end
+        if isfield(p0,'H'), p.Zxy(1,2) = p0.H; end
+        if isfield(p0,'I'), p.Zxy(2,1) = p0.I; end
+        if isfield(p0,'J'), p.Zxy(2,2) = p0.J; end
+        if isfield(p0,'K'), p.Zxy(3,1) = p0.K; end
+        if isfield(p0,'L'), p.Zxy(3,2) = p0.L; end
+
+        tp.p = p
+    end
+    if isfield(p0,"sideLen")
+        tp.p = p0;  % parameters provided in general form
     end
 
     % assert that Cy == distance of B0 to origin
