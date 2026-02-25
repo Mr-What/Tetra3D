@@ -24,14 +24,14 @@ function q=tetra2cart(tp,tet)
 
     % treat plane formed by the three servo positions as a new coordinate system.   % where all servo positions are in the z==0 plane, and A0 abd B0 lie on the y==0 line.
     % C0 is at x0
-    A0 = tp.A0 + tet(1)*tp.Ahat
-    B0 = tp.B0 + tet(2)*tp.Bhat
-    C0 = tp.C0 + tet(3)*tp.Chat
+    A0 = tp.A0 + tet(1)*tp.Ahat;
+    B0 = tp.B0 + tet(2)*tp.Bhat;
+    C0 = tp.C0 + tet(3)*tp.Chat;
     vAB = B0-A0;
     vAC = C0-A0;
     baseLen = [norm(B0-C0),...
                norm(vAC),...
-               norm(vAB)]
+               norm(vAB)];
     apex = getTetraCoords0(baseLen,tp.arm);
 
     % convert from effector coords back to tower
@@ -79,6 +79,9 @@ function apex=getTetraCoords0(baseLen,twrLen)
   err = [norm(A0-B0)-cc,norm(A0-C0)-bb,norm(B0-C0)-aa,...
          norm(apex-A0)-twrLen(1),...
          norm(apex-B0)-twrLen(2),...
-         norm(apex-C0)-twrLen(3)]
+         norm(apex-C0)-twrLen(3)];
+  if sum(abs(err)) >0
+      disp(err);
+  end
 
 end

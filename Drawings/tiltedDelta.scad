@@ -1,4 +1,4 @@
-use <ext20.scad>;
+use <ext20v.scad>;
 
 // openbeam sells 1515 extrusions in 270length (and others).
 // I think I got misumi at 300, but they are selectable.
@@ -15,6 +15,8 @@ railTilt = 13;//9.5;//10.34;//10.8;  // degrees
 towerExtLen = 1000;
 
 use <nema17.scad>;
+use <endstop20v.scad>;
+RES=30;  // higher for production render
 
 baseRailHeight = 60;
 
@@ -28,6 +30,7 @@ difference() {
   }
 
   dilatedExtrusions(3);  // for cut-outs for extrusions
+  translate([0,148.8,380]) rotate([-railTilt,0,180]) microswitchEndstop20v();
 }
 
 // extra supports for printing vertex (not needed with newer cura)
@@ -39,7 +42,13 @@ railTopToTableTop = baseRailHeight+towerEdgeBelow0+7.5;
 echo("Top of base rail to table top (no foot) ",railTopToTableTop);
 //%translate([-100,-80,-towerEdgeBelow0]) cube([200,10,railTopToTableTop]);
 
-
+module toothedPulley() difference() { cylinder(r=8,h=15.9,$fn=48);
+    for (a=[0:360/20:355]) rotate([0,0,a])
+        translate([0,6.5,6.8+.1]) linear_extrude(6.7+.1)
+        polygon([[-3,0],[-.4,0],[0,-.7],[.4,0],[3,0],[4,2],[-4,2]]);
+    
+    // 20 indentations for teeth
+}
 
 // disgnostic.  From lowest tip of tower, to where
 // inside edge of tower meets top plane of vertex
@@ -54,7 +63,7 @@ module dilatedExtrusions(verbose=3) {
         // make a little indent at foot of model to make feet fit better
         difference() {
           if (verbose % 2)
-            #ext20(1000,extFuzz);
+            #ext20v(1000,extFuzz);
           else
             ext20(1000,extFuzz);
           cube([14,14,1],center=true);
@@ -185,6 +194,7 @@ module baseVertex() difference() {
 
   translate([0,23,-15]) rotate([railTilt-90,0,0]) {
     %scale(1.02) nema17();
+    %translate([0,0,3.5]) toothedPulley();
     nema17MountHoles();
   }
 
@@ -195,7 +205,7 @@ module baseVertex() difference() {
   railZone();
   mirror([1,0,0]) railZone();
 
-  for (a=[-1,1]) {
+  *for (a=[-1,1]) {
     translate([45.1*a,-9,0]) rotate([0,0,-90-a*60])
       rotate([0,90,0]) M3railHole(8);
     translate([17*a,40,0]) rotate([0,0,-90-a*60])
@@ -280,9 +290,9 @@ zLo=-7.5+cr;//-4;
 
 module bevilHole(nf=48) rotate_extrude($fn=nf) bevilProfile();
 module bevilThroughHole(r=3,h=10) union() {
-  mirror([0,0,1])
+*  mirror([0,0,1])
     translate([0,0,-h/2]) scale(r,r,h) bevilHole();
-    translate([0,0,-h/2]) scale(r,r,h) bevilHole();
+*    translate([0,0,-h/2]) scale(r,r,h) bevilHole();
   cylinder(r=r,$fn=48,center=true,h=h+1);
 }
 
