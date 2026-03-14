@@ -1,6 +1,10 @@
 % octave script to save an animation of tetra plotter
-gp.W=360;gp.Z=940;gp.R=287;  % approx my prototype frame
-p=getTetraParams(gp)
+p.tower_radius=[0,0,0]+180;p.tilt_zenith = [0,0,0]+13;
+p.arm_length=[0,0,0]+287;p.tower_angle=[210,330,90];
+p.tilt_tangential=[0,0,0]; p.endstop_dist = [0,0,0]+500;
+
+p=getTetraParams(p)
+p.apex=795;  % near apex for tetrahedron
 m=1;
 r=80;
 %graphics_toolkit("gnuplot")

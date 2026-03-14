@@ -24,21 +24,24 @@ function q=tetra2cart(tp,tet)
 
     % treat plane formed by the three servo positions as a new coordinate system.   % where all servo positions are in the z==0 plane, and A0 abd B0 lie on the y==0 line.
     % C0 is at x0
-    A0 = tp.A0 + tet(1)*tp.Ahat;
-    B0 = tp.B0 + tet(2)*tp.Bhat;
-    C0 = tp.C0 + tet(3)*tp.Chat;
-    vAB = B0-A0;
-    vAC = C0-A0;
-    baseLen = [norm(B0-C0),...
-               norm(vAC),...
-               norm(vAB)];
+    %A0 = tp.A0 + tet(1)*tp.Ahat;
+    %B0 = tp.B0 + tet(2)*tp.Bhat;
+    %C0 = tp.C0 + tet(3)*tp.Chat;
+  cp = tp.base + (tp.dir .* (tet' * ones(1,3)))  % carriage positions in cartesian
+  vAB = cp(2,:) - cp(1,:);
+  vAC = cp(3,:) - cp(1,:);
+  %  vAB = B0-A0;
+  %  vAC = C0-A0;
+  %  baseLen = [norm(B0-C0),norm(vAC),norm(vAB)];
+  baseLen = [norm(cp(2,:) - cp(3,:)), norm(vAC), norm(vAB)];
+  
     apex = getTetraCoords0(baseLen,tp.arm);
 
     % convert from effector coords back to tower
     xHat = vAB / baseLen(3);
     xA = dot(xHat,vAC);
-    origin = A0 + xA*xHat;
-    yC = C0-origin;
+    origin = cp(1,:) + xA*xHat;
+    yC = cp(3,:)-origin;
     yHat = yC/norm(yC);
     zHat = -cross(xHat,yHat);
     q = origin + apex(1)*xHat + apex(2)*yHat + apex(3)*zHat;

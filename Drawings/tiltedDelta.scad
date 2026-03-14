@@ -1,4 +1,4 @@
-use <ext20v.scad>;
+RES=30;  // higher for production render
 
 // openbeam sells 1515 extrusions in 270length (and others).
 // I think I got misumi at 300, but they are selectable.
@@ -7,8 +7,10 @@ use <ext20v.scad>;
 // use the OpenBeam model, ext15ob.scad until I add that.
 //use <ext15ob.scad>;
 use <ext15m.scad>;  // Misumi 1515 extrusion profile
+//use <ext20v.scad>;
+use <ext20.scad>;
 
-extFuzz=0.1;  // extra padding to put around extrusion cut-outs
+extFuzz=0.3;  // extra padding to put around extrusion cut-outs
 
 baseExtLen = 370;
 railTilt = 13;//9.5;//10.34;//10.8;  // degrees
@@ -16,7 +18,6 @@ towerExtLen = 1000;
 
 use <nema17.scad>;
 use <endstop20v.scad>;
-RES=30;  // higher for production render
 
 baseRailHeight = 60;
 
@@ -24,13 +25,15 @@ baseRailHeight = 60;
 //translate([0,0,-960]) // center apex
 difference() {
   union() {
-    translate([0,0.47*baseExtLen,baseRailHeight]) baseVertex();
-    translate([0,0,towerExtLen*cos(railTilt)-21]) apex();
-    translate([0,0.68*baseExtLen,-5]) foot();
+    %translate([0,0.47*baseExtLen,baseRailHeight]) baseVertex();
+    %translate([0,0,towerExtLen*cos(railTilt)-21]) apex();
+    translate([0,0.682*baseExtLen,-5]) foot();
   }
 
   dilatedExtrusions(3);  // for cut-outs for extrusions
-  translate([0,148.8,380]) rotate([-railTilt,0,180]) microswitchEndstop20v();
+
+  // show placement of belt and carriage
+  %translate([0,148.8,380]) rotate([-railTilt,0,180]) microswitchEndstop20v();
 }
 
 // extra supports for printing vertex (not needed with newer cura)
@@ -63,9 +66,9 @@ module dilatedExtrusions(verbose=3) {
         // make a little indent at foot of model to make feet fit better
         difference() {
           if (verbose % 2)
-            #ext20v(1000,extFuzz);
+            #ext20(1000,extFuzz);
           else
-            ext20(1000,extFuzz);
+            ext20v(1000,extFuzz);
           cube([14,14,1],center=true);
         }
 
@@ -111,8 +114,8 @@ module dilatedExtrusions(verbose=3) {
 
 module foot() {
   hull() for(x=[-1,1]) for(y=[-1,1]) {
-     translate([12*x,12*y,2]) sphere(2,$fn=24);
-     translate([9*x,9*y-1,9]) sphere(4,$fn=24);
+     translate([12*x,12*y,2]) sphere(2,$fn=RES);
+     translate([9*x,9*y-1,9]) sphere(4,$fn=RES);
   }
 }
 
