@@ -27,7 +27,7 @@ function q=tetra2cart(tp,tet)
     %A0 = tp.A0 + tet(1)*tp.Ahat;
     %B0 = tp.B0 + tet(2)*tp.Bhat;
     %C0 = tp.C0 + tet(3)*tp.Chat;
-  cp = tp.base + (tp.dir .* (tet' * ones(1,3)))  % carriage positions in cartesian
+  cp = tp.base + (tp.dir .* (tet' * ones(1,3)));  % carriage positions in cartesian
   vAB = cp(2,:) - cp(1,:);
   vAC = cp(3,:) - cp(1,:);
   %  vAB = B0-A0;
@@ -83,7 +83,8 @@ function apex=getTetraCoords0(baseLen,twrLen)
          norm(apex-A0)-twrLen(1),...
          norm(apex-B0)-twrLen(2),...
          norm(apex-C0)-twrLen(3)];
-  if sum(abs(err)) >0
+  if sum(abs(err)) > 1e-11
+      keyboard
       disp(err);
   end
 

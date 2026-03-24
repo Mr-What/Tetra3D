@@ -65,7 +65,7 @@ $fn=24;
 
     for (a=[0:90:355]) {
        rotate([0,0,a])
-          slotV20profile();
+          slotV20profile(verbose);
     }
     if (floor(verbose/2) % 2) circle(r=2);
   }
