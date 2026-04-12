@@ -11,7 +11,8 @@
 %          arm_lengths
 %          tilt_radial      (towards origin)
 %          tilt_tangential  (towards left as tower facing origin)
-%          endstop_distance (distance from z=0 plane to location of arm axis at endstop)
+%          position_endstops (distance from z=0 plane to location of arm axis at endstop)
+%          rotation_distance (how many mm movement/rotation)
 %
 % for kinematics, we convert these to:
 %    base[3,3] -- base locations, Z's should be 0
@@ -43,7 +44,8 @@ function kp = tetraKineticParams(p)
     kp.base = [ [-1,-1,0] ; [1,-1,0]; [0,0,1] ];
     kp.dir = [[0,0,1];[0,0,1];[0,0,1]];
     kp.arm = p.arm_lengths;
-    kp.endstop = p.endstop_distance;
+    kp.endstop = p.position_endstops;
+    kp.mmPerRot = p.rotation_distances;
     for n=1:3
         a = p.delta_angles(n);
         r = p.delta_radius(n);
@@ -69,7 +71,8 @@ function p = tetraDefinitionParams(k)
     p.delta_angles = [210,330,90];
     p.tilt_radial = [0,0,0];
     p.tilt_tangential = [0,0,0];
-    p.endstop_dist = [1,1,1] * 500;
+    p.position_endstops = [1,1,1] * 500;
+    p.rotation_distances = [1,1,1] * 40;
     kp.base = [ [-1,-1,0] ; [1,-1,0]; [0,0,1] ];
     kp.dir = [[0,0,1],[0,0,1],[0,0,1]];
 
