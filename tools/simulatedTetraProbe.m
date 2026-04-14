@@ -1,6 +1,6 @@
 %  generate simulated bed probe data for a tilted_delta (tetra) printer
 
-function z = getSimulatedTetraProbeData(x, y, zStart, tp, p0, file='probeSim.mat')
+function z = simulatedTetraProbe(x, y, zStart, tp, p0, file='probeSim.mat')
     z = zeros(size(x));
     m = numel(x);
     for k = 1:m

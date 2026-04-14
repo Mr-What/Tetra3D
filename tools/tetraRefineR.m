@@ -11,7 +11,7 @@
 % [IGP]     -- initial guess parameters, if not same as PP
 %
 % RETURN:  revised parameter set
-function tp = deltaRefineR(PP,IGP)
+function tp = tetraRefineR(PP,IGP)
     global callCount;
     callCount = 0;
     

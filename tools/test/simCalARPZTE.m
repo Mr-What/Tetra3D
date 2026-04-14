@@ -36,7 +36,7 @@ tp = getTetraParams(tp)
 n = length(v);
 x = repmat(v,n,1);
 y=x';
-z = getSimulatedTetraProbeData(x, y, 9, tp, p0, file='probeBadARPZTE.mat');
+z = simulatedTetraProbe(x, y, 9, tp, p0, file='probeBadARPZTE.mat');
 probe = [x(:), y(:), z(:)];  % store probe results with parameters uised
 
 xyIdeal = loadAsStruct('idealDeltaCalMeas10_60.m');
@@ -45,7 +45,7 @@ xyMeas = simulateTetraXYmeas(tp,p0,xyIdeal); % simulate measured cal print data
 % compute tower positions for all tests points, and store in tp struct
 %tp = appendTowerPositions(tp.p, probe);
 tp = appendTowerPositions(tp.p, probe, xyMeas, xyIdeal);
-gp = deltaRefineARPZTE(tp);
+gp = tetraRefineARPZTE(tp);
 
 % write out updates for klipper printer.cfg
 write_tilted_delta_update_cfg(gp.p,'updateARPZTE.cfg');
