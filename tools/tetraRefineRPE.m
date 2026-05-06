@@ -11,15 +11,15 @@
 %             loaded by loadAsStruct(fileName.m)
 %
 %    [IGP] -- Configuation parameters, for the initial guess.
-%             Default is same as PP, but in some cases, where
+%             Default is same as PP.p, but in some cases, where
 %             partial optimizations are performed in sequence from
 %             a single set of probe data, some of the parameters
 %             used in this optimization may not be the same as ones
 %             used for the original probe(s).
 %-
-function tp = tetraRefineRE(PP,IGP, ...
-                            initialStep = [1,1,1,1], ...
-                            smallBox = [.004,.004,.004,.004])
+function tp = tetraRefineRPE(PP,IGP, ...
+            initialStep = ones(1,9), ...
+            smallBox = ones(1,9) * .001)
     global callCount;
     callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
 
@@ -33,17 +33,30 @@ function tp = tetraRefineRE(PP,IGP, ...
     end
     gp.verbose = 0;
 
-    initialGuess = [gp.p.position_endstops, mean(gp.p.delta_radius)];
-    maxIterations=444;
+    initialGuess = [gp.p.delta_radius, ...
+                    gp.p.delta_angles, ...
+                    gp.p.position_endstops];
+    maxIterations=666;
     [fit,nEval,status,err] = SimplexMinimize(...
-        @(p) tetraFitErr(p,PP,gp,@setTetraRadiusEndstop),...
+        @(p) tetraFitErr(p,PP,gp,@setTetraRPE),...
    	initialGuess, initialStep, smallBox, maxIterations)
 
+    % check (simulaed annealing)
+    fit1=fit;err1=err;
+    callCount=0;
+    ig = fit + (rand(1,9)-.5) * .1;
+    [fit,nEval,status,err] = SimplexMinimize(...
+        @(p) tetraFitErr(p,PP,gp,@setTetraRPE),...
+   	ig, initialStep, smallBox, maxIterations)
+
+    disp([fit1;fit]);
+    disp([err1,err]);
+    
     % return refined tetra (tilted) parameter set
-    tp = setTetraRadiusEndstop(fit,gp);
+    tp = setTetraRPE(fit,gp);
 
     % plot parameter fit, retrieve full parameter vector(s)
-    [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,PP,gp,@setTetraRadiusEndstop);
+    [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,PP,gp,@setTetraRPE);
     pf = PP.probe;  pf(:,3) = pf(:,3) + errZ;
     plot3(pf(:,1),pf(:,2),pf(:,3),'ro');
     legend('Parabolic Fit to measurements','Measured','Delta Fit Points');
@@ -54,9 +67,10 @@ function tp = tetraRefineRE(PP,IGP, ...
 end
 
 % --- copy parameters from search vector over to kinetic param struct
-function gp = setTetraRadiusEndstop(p,igp)
+function gp = setTetraRPE(p,igp)
     gp = igp.p;
-    gp.delta_radius = [0,0,0] + p(4);
-    gp.position_endstops = p(1:3);
+    gp.delta_radius = p(1:3);
+    gp.delta_angles = p(4:6);
+    gp.position_endstops = p(7:9);
     gp = getTetraParams(gp);  % re-build kinematic params
 end

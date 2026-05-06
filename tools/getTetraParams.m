@@ -34,6 +34,8 @@ function tp=getTetraParams(p0)
     if isfield(p0,"delta_radius")  % each tower, at base
         tp.p = p0;  % parameters in "interface" form
         tp.k = tetraKineticParams(p0);
+    elseif isfield(p0,"printer")  % this must be from loadKlipperCfg.m
+        tp = getTetraParams(cfg2tetraDef(p0));
     else
         tp.k = p0;
         tp.p = tetraDefinitionParams(p0);
@@ -87,4 +89,17 @@ function p = tetraDefinitionParams(k)
         p.tilt_radial(n) = atan2d(dot(rHat,d), d(3) );
         p.tilt_tangential(n) = atan2d(dot(tHat,d), d(3));
     end
+end
+
+% extract tetra parameter set from loadKlipperCfg.m printer.cfg file
+function p = cfg2tetraDef(cfg)
+    p = cfg.printer;
+    s = [ cfg.stepper_a.position_endstop,
+          cfg.stepper_b.position_endstop,
+          cfg.stepper_c.position_endstop];
+    r = [ cfg.stepper_a.rotation_distance,
+          cfg.stepper_b.rotation_distance,
+          cfg.stepper_c.rotation_distance];
+    p.position_endstops = s(:)';
+    p.rotation_distances = r(:)';
 end

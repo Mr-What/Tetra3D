@@ -8,7 +8,7 @@
 % return : pos adjusted for mis-match in stepper parameters
 %              non-physical location, but real, if there is an error
 function tet = commandedTowerPositions(pk, pos, gk)
-    de = gk.endstop - pk.endstop;
+    de = pk.endstop - gk.endstop;
     endstopsMatch = sum(abs(de)) < 0.00001;
     scaleMatch =    sum(abs(pk.mmPerRot - gk.mmPerRot)) < 0.000001;
     if scaleMatch

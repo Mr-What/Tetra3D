@@ -2,82 +2,121 @@
 """
 extract_bed_probe.py
 
-Parse a Klipper printer.cfg and klippy.log, and emit an Octave script that
-defines a set of variables in the current workspace.
+Parse a klippy.log file and emit an Octave script that defines a set of
+variables in the current workspace – inspired by FORTRAN namelists.
+
+The printer configuration is read from the config block that Klipper writes
+at the top of every log session (delimited by '===== Config file =====' and
+'======================='), so no separate printer.cfg argument is needed.
 
 Usage:
-    python3 klipper_to_octave.py <printer.cfg> <klippy.log> <probeResults.m>
+    python3 extract_bed_probe.py <klippy.log> <output.m>
 
-Dependencies: only the Python standard library (all of which are already
-present in any Klipper installation).
+Dependencies: only the Python standard library (already present in any
+Klipper installation).
 """
 
 import argparse
 import re
 import sys
-import os
-from datetime import datetime
+
 
 # ---------------------------------------------------------------------------
-# printer.cfg parser
+# printer.cfg parser  (operates on a list of text lines)
 # ---------------------------------------------------------------------------
 
-def parse_cfg(path):
+def parse_cfg_from_lines(lines):
     """
-    Minimal INI-style parser that handles Klipper's multi-value config keys
-    (values that continue on indented lines).  Returns a dict of
-    { section_name: { key: value_string } }.
+    Minimal Klipper-style INI parser.  Accepts both '=' and ':' as
+    key/value separators.  Handles indented continuation lines.
+
+    Returns { section_name_lower: { key_lower: value_string } }.
     """
     sections = {}
     current_section = None
     current_key = None
 
-    with open(path, 'r') as fh:
-        for raw in fh:
-            line = raw.rstrip('\n')
+    for raw in lines:
+        line = raw.rstrip('\n')
+        stripped = line.strip()
 
-            # Blank line or comment resets continuation
-            stripped = line.strip()
-            if not stripped or stripped.startswith('#') or stripped.startswith(';'):
-                current_key = None
-                continue
-
-            # Section header  [name]
-            m = re.match(r'^\[([^\]]+)\]', stripped)
-            if m:
-                current_section = m.group(1).strip().lower()
-                sections.setdefault(current_section, {})
-                current_key = None
-                continue
-
-            # Continuation line (starts with whitespace and current_key set)
-            if line[0] in (' ', '\t') and current_section is not None and current_key is not None:
-                sections[current_section][current_key] += ' ' + stripped
-                continue
-
-            # key = value
-            if '=' in stripped and current_section is not None:
-                key, _, value = stripped.partition('=')
-                current_key = key.strip().lower()
-                sections[current_section][current_key] = value.strip()
-                continue
-
+        # Blank or comment line – resets continuation
+        if not stripped or stripped.startswith('#') or stripped.startswith(';'):
             current_key = None
+            continue
+
+        # Section header  [name]
+        m = re.match(r'^\[([^\]]+)\]', stripped)
+        if m:
+            current_section = m.group(1).strip().lower()
+            sections.setdefault(current_section, {})
+            current_key = None
+            continue
+
+        if current_section is None:
+            continue
+
+        # Continuation line – raw line starts with whitespace
+        if line and line[0] in (' ', '\t') and current_key is not None:
+            sections[current_section][current_key] += ' ' + stripped
+            continue
+
+        # key = value  OR  key: value  (split on first = or :)
+        m = re.match(r'^([^=:]+)[=:](.*)', stripped)
+        if m:
+            key   = m.group(1).strip().lower()
+            value = m.group(2).strip()
+            # Strip inline comments
+            value = re.sub(r'\s*[#;].*$', '', value).strip()
+            current_key = key
+            sections[current_section][current_key] = value
+            continue
+
+        current_key = None
 
     return sections
 
 
-def cfg_get(sections, section, key, default=None):
-    return sections.get(section, {}).get(key, default)
+def extract_cfg_block_from_log(log_lines):
+    """
+    Klipper writes the full printer.cfg into the log at every startup,
+    surrounded by:
+        ===== Config file =====
+        ...
+        =======================
+
+    There may be multiple sessions in one log file (Klipper restarts).
+    Return the lines of the LAST such block, excluding the delimiter lines.
+    """
+    START = '===== Config file ====='
+    END   = '======================='
+
+    last_block_lines = []
+    in_block = False
+    current_block = []
+
+    for line in log_lines:
+        s = line.strip()
+        if s == START:
+            in_block = True
+            current_block = []
+            continue
+        if s == END and in_block:
+            in_block = False
+            last_block_lines = current_block[:]
+            continue
+        if in_block:
+            current_block.append(line)
+
+    return last_block_lines
 
 
 def parse_float_list(s):
     """Parse a comma- or whitespace-separated string into a list of floats."""
     if s is None:
         return []
-    tokens = re.split(r'[\s,]+', s.strip())
     result = []
-    for t in tokens:
+    for t in re.split(r'[\s,]+', s.strip()):
         t = t.strip()
         if t:
             try:
@@ -92,33 +131,22 @@ def parse_float_list(s):
 # ---------------------------------------------------------------------------
 
 def oct_scalar(name, value):
-    """name = value;"""
     return f"{name} = {value!r};"
 
-
 def oct_row_vec(name, values):
-    """name = [v1, v2, ...];"""
     inner = ', '.join(repr(float(v)) for v in values)
     return f"{name} = [{inner}];"
 
-
 def oct_matrix(name, rows):
-    """
-    name = [r0c0, r0c1, r0c2;
-            r1c0, r1c1, r1c2;
-            ...];
-    """
     if not rows:
         return f"{name} = [];"
-    row_strs = []
-    for row in rows:
-        row_strs.append(', '.join(repr(float(v)) for v in row))
+    row_strs = [', '.join(repr(float(v)) for v in row) for row in rows]
     inner = ';\n        '.join(row_strs)
     return f"{name} = [{inner}];"
 
 
 # ---------------------------------------------------------------------------
-# klippy.log parser
+# klippy.log runtime data parser
 # ---------------------------------------------------------------------------
 
 RE_G28      = re.compile(r'Recv:\s+G28')
@@ -132,46 +160,39 @@ RE_TRIG_Z   = re.compile(
 )
 
 
-def parse_log(path):
+def parse_log_runtime(log_lines):
     """
-    Returns (z_offset, probe_rows) where:
-      z_offset   – float or None
-      probe_rows – list of [x, y, z] collected after the last 'Recv: G28'
+    Scan the log for:
+      - most recent 'echo: Z_OFFSET: <val>'
+      - probe triplets [cmd_x, cmd_y, trigger_z] after the last 'Recv: G28'
+
+    Returns (z_offset_or_None, [[x,y,z], ...])
     """
-    with open(path, 'r') as fh:
-        lines = fh.readlines()
-
-    # Find index of the LAST 'Recv: G28' line
-    last_g28 = None
-    for i, line in enumerate(lines):
-        if RE_G28.search(line):
-            last_g28 = i
-
-    # Scan entire file for the most-recent Z_OFFSET echo
+    # Last Z_OFFSET echo in the whole file
     z_offset = None
-    for line in lines:
+    for line in log_lines:
         m = RE_Z_OFFSET.search(line)
         if m:
             z_offset = float(m.group(1))
 
-    # Collect probe triplets from last G28 to end of file
+    # Index of last G28
+    last_g28 = None
+    for i, line in enumerate(log_lines):
+        if RE_G28.search(line):
+            last_g28 = i
+
     probe_rows = []
     if last_g28 is not None:
-        search_lines = lines[last_g28:]
-    else:
-        search_lines = []
-
-    pending_xy = None
-    for line in search_lines:
-        m_xy = RE_CMD_XY.search(line)
-        if m_xy:
-            pending_xy = (float(m_xy.group(1)), float(m_xy.group(2)))
-            continue
-
-        m_z = RE_TRIG_Z.search(line)
-        if m_z and pending_xy is not None:
-            probe_rows.append([pending_xy[0], pending_xy[1], float(m_z.group(1))])
-            pending_xy = None
+        pending_xy = None
+        for line in log_lines[last_g28:]:
+            m_xy = RE_CMD_XY.search(line)
+            if m_xy:
+                pending_xy = (float(m_xy.group(1)), float(m_xy.group(2)))
+                continue
+            m_z = RE_TRIG_Z.search(line)
+            if m_z and pending_xy is not None:
+                probe_rows.append([pending_xy[0], pending_xy[1], float(m_z.group(1))])
+                pending_xy = None
 
     return z_offset, probe_rows
 
@@ -182,29 +203,29 @@ def parse_log(path):
 
 def main():
     ap = argparse.ArgumentParser(
-        description='Convert Klipper printer.cfg + klippy.log to an Octave variable script.'
+        description='Extract Klipper bed-probe data from klippy.log and write an Octave script.'
     )
-    ap.add_argument('cfg',    help='Path to printer.cfg')
     ap.add_argument('log',    help='Path to klippy.log')
     ap.add_argument('output', help='Path to output .m file')
     args = ap.parse_args()
 
-    # --- parse printer.cfg --------------------------------------------------
-    sections = parse_cfg(args.cfg)
+    with open(args.log, 'r') as fh:
+        log_lines = fh.readlines()
+
+    # --- extract and parse the embedded config block ------------------------
+    cfg_lines = extract_cfg_block_from_log(log_lines)
+    if not cfg_lines:
+        print('WARNING: no config block found in log – printer.cfg variables will be missing',
+              file=sys.stderr)
+
+    sections = parse_cfg_from_lines(cfg_lines)
 
     printer = sections.get('printer', {})
-
-    delta_radius      = parse_float_list(printer.get('delta_radius'))
-    delta_angles      = parse_float_list(printer.get('delta_angles') or printer.get('delta_angle'))
-    arm_lengths       = parse_float_list(printer.get('arm_lengths') or printer.get('arm_length'))
-    tilt_radial       = parse_float_list(printer.get('tilt_radial'))
-    tilt_tangential   = parse_float_list(printer.get('tilt_tangential'))
-
-    # Scalar values that may be single-element lists
-    def maybe_scalar(lst):
-        if len(lst) == 1:
-            return lst[0]
-        return lst
+    delta_radius    = parse_float_list(printer.get('delta_radius'))
+    delta_angles    = parse_float_list(printer.get('delta_angles') or printer.get('delta_angle'))
+    arm_lengths     = parse_float_list(printer.get('arm_lengths')  or printer.get('arm_length'))
+    tilt_radial     = parse_float_list(printer.get('tilt_radial'))
+    tilt_tangential = parse_float_list(printer.get('tilt_tangential'))
 
     pos_endstops = []
     rot_dists    = []
@@ -213,69 +234,65 @@ def main():
         pe  = sec.get('position_endstop')
         rd  = sec.get('rotation_distance')
         pos_endstops.append(float(pe) if pe is not None else float('nan'))
-        rot_dists.append(float(rd) if rd is not None else float('nan'))
+        rot_dists.append(float(rd)    if rd is not None else float('nan'))
 
     probe_sec = sections.get('probe', {})
     probe_x   = float(probe_sec.get('x_offset', 0.0))
     probe_y   = float(probe_sec.get('y_offset', 0.0))
     probe_z   = float(probe_sec.get('z_offset', 0.0))
 
-    # --- parse klippy.log ---------------------------------------------------
-    z_offset, probe_rows = parse_log(args.log)
+    # --- parse runtime log data ---------------------------------------------
+    z_offset, probe_rows = parse_log_runtime(log_lines)
 
     # --- emit Octave script -------------------------------------------------
-    lines_out = []
-    lines_out.append('% Auto-generated by extract_bed_probe.py')
-    lines_out.append('% Source cfg : ' + args.cfg)
-    lines_out.append('% Source log : ' + args.log)
-    lines_out.append('% ' + datetime.now().strftime('%y/%m/%d %H:%M') + '   ' + os.getcwd())
-    lines_out.append('')
-    lines_out.append('% --- printer.cfg variables ---')
+    out = []
+    out.append('% Auto-generated by extract_bed_probe.py')
+    out.append('% Source log : ' + args.log)
+    out.append('')
+    out.append('% --- printer.cfg variables (from embedded config block) ---')
 
-    def emit_vec_or_scalar(name, lst):
+    def emit(name, lst):
         if not lst:
-            lines_out.append(f'% WARNING: {name} not found in printer.cfg')
+            out.append(f'% WARNING: {name} not found in config')
         elif len(lst) == 1:
-            lines_out.append(oct_scalar(name, lst[0]))
+            out.append(oct_scalar(name, lst[0]))
         else:
-            lines_out.append(oct_row_vec(name, lst))
+            out.append(oct_row_vec(name, lst))
 
-    emit_vec_or_scalar('delta_radius',    delta_radius)
-    emit_vec_or_scalar('delta_angles',    delta_angles)
-    emit_vec_or_scalar('arm_lengths',     arm_lengths)
-    emit_vec_or_scalar('tilt_radial',     tilt_radial)
-    emit_vec_or_scalar('tilt_tangential', tilt_tangential)
+    emit('delta_radius',    delta_radius)
+    emit('delta_angles',    delta_angles)
+    emit('arm_lengths',     arm_lengths)
+    emit('tilt_radial',     tilt_radial)
+    emit('tilt_tangential', tilt_tangential)
 
-    lines_out.append('')
-    lines_out.append(oct_row_vec('position_endstops', pos_endstops))
-    lines_out.append(oct_row_vec('rotation_distances', rot_dists))
+    out.append('')
+    out.append(oct_row_vec('position_endstops',  pos_endstops))
+    out.append(oct_row_vec('rotation_distances', rot_dists))
 
-    lines_out.append('')
-    lines_out.append('% probe offset vector [x, y, z]')
-    lines_out.append(oct_row_vec('probe_offset', [probe_x, probe_y, probe_z]))
+    out.append('')
+    out.append('% probe offset vector [x_offset, y_offset, z_offset]')
+    out.append(oct_row_vec('probe_offset', [probe_x, probe_y, probe_z]))
 
-    lines_out.append('')
-    lines_out.append('% --- klippy.log variables ---')
+    out.append('')
+    out.append('% --- runtime log variables ---')
 
     if z_offset is not None:
-        lines_out.append(oct_scalar('Z_OFFSET', z_offset))
+        out.append(oct_scalar('Z_OFFSET', z_offset))
     else:
-        lines_out.append('% WARNING: Z_OFFSET not found in log')
+        out.append('% WARNING: Z_OFFSET not found in log')
 
-    lines_out.append('')
-    lines_out.append('% Bed probe matrix: each row is [cmd_x, cmd_y, trigger_z]')
+    out.append('')
+    out.append('% Bed probe matrix: each row is [cmd_x, cmd_y, trigger_z]')
     if probe_rows:
-        lines_out.append(oct_matrix('probe', probe_rows))
+        out.append(oct_matrix('probe', probe_rows))
     else:
-        lines_out.append('% WARNING: no probe data found after last G28 (home)')
-        lines_out.append('probe = [];')
+        out.append('% WARNING: no probe data found after last G28')
+        out.append('probe = [];')
 
-    lines_out.append('')
-
-    output = '\n'.join(lines_out) + '\n'
+    out.append('')
 
     with open(args.output, 'w') as fh:
-        fh.write(output)
+        fh.write('\n'.join(out) + '\n')
 
     print(f'Wrote {len(probe_rows)} probe point(s) to {args.output}')
     if z_offset is not None:

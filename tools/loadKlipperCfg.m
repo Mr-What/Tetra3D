@@ -36,7 +36,11 @@ function cfg = loadKlipperCfg(filename)
 
     % Strip trailing whitespace
     line = strtrim(raw);
-
+    
+    if strncmp(line,'==========',8)
+        break;  % end of config header in klippy.log file
+    end
+    
     % Skip blank lines and full-line comment lines
     if isempty(line) || line(1) == '#' || line(1) == ';'
       current_key = '';   % breaks continuation
@@ -46,7 +50,7 @@ function cfg = loadKlipperCfg(filename)
     % --- Section header  [section name] ------------------------------------
     tok = regexp(line, '^\[([^\]]+)\]', 'tokens', 'once');
     if ~isempty(tok)
-      current_section = sanitize_name(strtrim(tok{1}));
+      current_section = sanitize_name(strtrim(tok{1}))
       current_key     = '';
       if ~isfield(cfg, current_section)
         cfg.(current_section) = struct();
