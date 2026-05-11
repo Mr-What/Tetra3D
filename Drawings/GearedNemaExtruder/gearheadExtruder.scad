@@ -47,8 +47,12 @@ module lever() difference() { leverBody();
                 [-6,6],[4,6],[5,3], [-6,-3]]);
             cylinder(r=3.5,h=Zenv+1,center=true,$fn=20);
         }
-        cylinder(r=1.4,h=44,center=true,$fn=RES/2);  // let lower be thread tight
-        cylinder(r=1.6,h=11,$fn=RES/2); // top side free
+        
+        // axle holes are tight, if you want to screw to plastic.
+        // drill out head side, to screw to plastic.
+        // drill out both sides if using a nut or nyloc
+        //cylinder(r=1.6,h=11,$fn=RES/2); // top side free
+        cylinder(r=1.35,h=44,center=true,$fn=RES/2);  // let lower be thread tight
     }
     
     // clearance around filiment path
@@ -72,27 +76,46 @@ module leverForkBrace() mirrorZ() translate([0,0,4]) rotate(-45)
 
 module leverAxle() mirrorZ() translate([0,0,4]) scale([.8,.8,1]) leverTip();
 
-module leverHandle() difference() {
-    hull() { leverAxle();
-        mirrorZ() translate([60,2,4]) scale([.3,.3,1]) leverTip();
-    }
+module leverHandle(withEndSupport=false) difference() {
+    union() {
+        hull() { leverAxle();
+            //mirrorZ() translate([60,2,4]) scale([.3,.3,1]) #leverTip();
+            translate([60,2]) cylinder(r=1.5,h=Tlever+1,center=true,$fn=RES/2);
+        }
 
+        // this overhang is too much for my printer.
+        //    add support for base print
+        if (withEndSupport) translate([60-4,2,-Zlever]) pairX(4)
+            cylinder(r1=.6,r2=1.5,h=4,$fn=RES/2);
+    }
+    
     // grooves for rubber bands
     mirrorZ() translate([56,1.9,7]) rotate([90,0,2])
-       scale([1,1,.7])spool(5,6,6,3);    
+        scale([1,1,.7])spool(5,6,6,3);    
+
+    //// makes printing tricky.  harder to alter down side.
+    //translate([61,2]) hull() {
+    //    translate([0,0,5.5]) sphere(2.5,$fn=RES/2);
+    //    translate([0,0,-Tlever/2-1]) cylinder(r=2.5,h=1,$fn=RES/2);
+    //}
 }
 
 module leverBody() union() {
-    translate(idlerOffset) %idler();
-    translate(idlerOffset) hull() { leverForkIdler(); leverForkBrace(); }
-
+    translate(idlerOffset) {
+        %idler();
+        hull() { leverForkIdler(); leverForkBrace(); }
+        
+        // show socket head locations for idler axle
+        %pairZ(7.5) cylinder(r=2.25,h=3,center=true,$fn=24);
+    }
+    
     leverHandle();    
     hull() { translate(idlerOffset) leverForkIdler();
         leverAxle();
     }
     
     // spacer to gearhead base plate
-    translate([0,0,-Zlever+.1]) cylinder(r1=2.7,r2=3.8,h=5,$fn=RES);
+    //translate([0,0,-Zlever+.1]) cylinder(r1=2.7,r2=3.8,h=5,$fn=RES);
 }
 
 module idlerEnvelope() difference() { // clear close envelope around idler
@@ -107,7 +130,12 @@ module blockBody() union() {
         square(6.8);
         translate([3.4,20]) circle(3.4,$fn=RES);
     }
-    translate([9,12.2,Zlever]) leverHandle();
+    translate([9,12.2,Zlever]) leverHandle(withEndSupport=true);
+    
+    // flat area for bowden mount
+    translate([6,16.7,Zlever]) rotate([90,0,0])
+        cylinder(r1=4.5, r2=6.5, h=4.4+.6, center=true, $fn=RES);
+    
 }
 
 module block() difference() { blockBody();
@@ -117,20 +145,37 @@ module block() difference() { blockBody();
             cylinder(r1=rM3head-.1, r2=rM3head+.2, h=4, $fn=RES/2);
        
         //slot for arm
-        translate([0,0,Zlever]) hull() {
-            translate([10,-10]) cylinder(r=5,h=Tlever+2,center=true,$fn=RES);
-            translate([10,0]) rotate(10) scale([6,3,1])
-                cylinder(r=1,h=Tlever+2,center=true,$fn=RES);
-            translate([28,-14]) cylinder(r=.1,h=Tlever+2,center=true,$fn=3);
+        translate([0,0,Zlever]) {
+            hull() {
+                translate([10,-10]) cylinder(r=5,h=Tlever+2,center=true,$fn=RES);
+                translate([10,0]) rotate(10) scale([6,3,1])
+                    cylinder(r=1,h=Tlever+2,center=true,$fn=RES);
+                translate([28,-14]) cylinder(r=.1,h=Tlever+2,center=true,$fn=3);
+            }
+            
+            // clearance for possible socket-head bolt(s) on idler
+            //*translate([10,-10]) rotate(50)
+            //    rotate_extrude(angle=50,$fn=RES) translate([7,0])
+            //        square([5.5+1,Tlever+2+2*3+1],center=true);
+            translate([10,-10]) hull() for(a=[75:10:95]) rotate(a) translate([7,0])
+                cylinder(r=3,h=Tlever+2+2*3+1,center=true,$fn=RES/2);
         }
         
-        // hole for filament
-        #rotate(0) translate([6,0,Zlever])
+        #translate([6,0,Zlever]) {
+            // hole for filament
             rotate([-90,0,0]) cylinder(r=1,h=40,$fn=RES/2);
-        #rotate(-7) translate([6,0,Zlever])
-            rotate([ 90,0,0]) cylinder(r=1,h=40,$fn=RES/2);
+            rotate([-90,0,0]) translate([0,0,6]) cylinder(r2=1,r1=3,h=7,$fn=RES/2);
+
+            // bowden hose fitting mount
+            translate([0,14.5]) rotate([-90,0,0])
+                cylinder(r1=2.25-.05, r2=2.9+.2, h=4.4+1, $fn=RES/2);
+        }
         
-        //translate([0,-50,10]) cube(100);
+        // incoming filament hole
+        #rotate(-7) translate([6,0,Zlever])
+            rotate([ 90,0,0]) cylinder(r=1.2,h=40,$fn=RES/2);
+        
+        //translate([0,-50,18]) cube(100);
     }
 
 
