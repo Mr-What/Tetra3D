@@ -9,8 +9,8 @@ function write_tilted_delta_update_cfg(update, fNam)
     end
 
     fn = fieldnames(update);
-    has_rot_dist = isfield(update,'rotation_distances')
-    has_endstops = isfield(update, 'position_endstops')
+    has_rot_dist = isfield(update,'rotation_distances');
+    has_endstops = isfield(update, 'position_endstops');
     has_stepper_update = has_rot_dist || has_endstops;
     if has_stepper_update
         for k=1:3
@@ -44,5 +44,5 @@ function hdr = writeValueUpdate(fid, update, nam, hdr)
         fprintf(fid,'[printer]\n');
         hdr = true;
     end
-    fprintf(fid,'%s: %.6f, %.6f, %.6f\n', nam, update.(nam));
+    fprintf(fid,'%s: %.6f , %.6f , %.6f\n', nam, update.(nam));
 end

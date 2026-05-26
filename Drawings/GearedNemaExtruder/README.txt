@@ -1,0 +1,4 @@
+Simple bowden extruder for geared Nema 17 by Stargrove1 on Thingiverse: https://www.thingiverse.com/thing:1196498
+
+Summary:
+Just another MK8 bowden extruder, this one is for a geared Nema17 stepper motor with the ratio 5.18:1. It was designed for a Rostock Mini Pro with minimal parts to print.Parlist:1 x Nema17 geared stepper1 x MK8 drive gear3 x M3 x 23mm screws1 x M4 x 12mm screw1 x Ball bearing 11mm x 4mm x 4mm1 x Bowden tube fitting M51 x Strong spring ~ 25-30mm x 7mm (force at the bearing ~60N with my setup, needs to be reduced a bit) Also included, a fixture to mount it at the smooth rods of a Rostock Mini if used in this combination, further M3 screws required.

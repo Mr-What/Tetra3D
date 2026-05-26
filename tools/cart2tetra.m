@@ -19,7 +19,6 @@ function tet = cart2tetra(tp,xyz)
 end
 
 function [d,disc] = towerDistance(p0,vHat,r,q)
-
   % for quadratic, a*d^2 + b*d + c = 0, a==1,
   b = 2 * dot(vHat,p0-q);
   dq = q - p0;

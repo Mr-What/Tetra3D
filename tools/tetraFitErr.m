@@ -5,6 +5,11 @@
 %
 % Provide function fSetParams to set selected
 % parameters in gp for the given parameter vector to evaluate
+%
+%   p          - search parameter vector
+%   pp         - Probe Parameters, parameters used when making probe
+%   igp        - Guess Parameters.  guess at better parameters
+%   fSetParams - function to make a new parameter struct, from p
 function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
     gp = fSetParams(p,igp);  % copy parameter vector to standard param struct
     [err,errZ,badZ] = tetraProbeErr(pp.k, pp.pos, gp.k);

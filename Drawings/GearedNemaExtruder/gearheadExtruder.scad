@@ -1,7 +1,7 @@
 // add some features to thingiverse drawing circa 2015
 RES=30;  // make larger for production render
 
-Tlever = 11;  //lever thickness
+Tlever = 12;  //lever thickness
 Zlever = 10;  // lever center this far from bottom of block
 
 Zenv = 5.5;  // height of envelope around idler
@@ -20,9 +20,9 @@ a = a0 + amp*sin(p);  // animation angle
 //a=aHi;
 echo("anim ang ",round(a));
 
-%translate([10,-10,Zlever])  // put rotational axis where it belongs
+translate([10,-10,Zlever])  // put rotational axis where it belongs
 rotate(a)  // comment this out to turn off animation
-lever();
+%lever();
 
 // i think gearhead holes are 20mm on center
 //%translate([-10,10,5]) {
@@ -80,7 +80,7 @@ module leverHandle(withEndSupport=false) difference() {
     union() {
         hull() { leverAxle();
             //mirrorZ() translate([60,2,4]) scale([.3,.3,1]) #leverTip();
-            translate([60,2]) cylinder(r=1.5,h=Tlever+1,center=true,$fn=RES/2);
+            translate([60,2]) cylinder(r=1.5,h=Tlever,center=true,$fn=RES/2);
         }
 
         // this overhang is too much for my printer.
@@ -125,10 +125,15 @@ module idlerEnvelope() difference() { // clear close envelope around idler
 
 module mirrorZ() { mirror([0,0,1]) children(); children(); }
 
+FilamentIncomingAngle = -7;
+
 module blockBody() union() {
-    rotate_extrude($fn=2*RES) translate([14.15-2.8,0]) hull() {
+    rotate_extrude($fn=2*RES) translate([14.15-2.8,0]) union() {
         square(6.8);
-        translate([3.4,20]) circle(3.4,$fn=RES);
+        hull() {
+            translate([0,6.4]) square([6.8,.8]);
+            translate([3.4-.6,20]) scale([3.4+.6,2]) circle(1,$fn=RES);
+        }
     }
     translate([9,12.2,Zlever]) leverHandle(withEndSupport=true);
     
@@ -136,47 +141,52 @@ module blockBody() union() {
     translate([6,16.7,Zlever]) rotate([90,0,0])
         cylinder(r1=4.5, r2=6.5, h=4.4+.6, center=true, $fn=RES);
     
+    // flat area to guide insertion of filament
+    translate([4.2,-15,Zlever]) rotate([90,0,FilamentIncomingAngle])
+        cylinder(r1=5, r2=3.5, h=5, $fn=RES/2);
+    
 }
 
 module block() difference() { blockBody();
         
-        gearhead(.2);
-        translate([0,0,21]) onHeadBolts()
-            cylinder(r1=rM3head-.1, r2=rM3head+.2, h=4, $fn=RES/2);
+    gearhead(.2);
+    translate([0,0,19]) onHeadBolts()
+        cylinder(r1=rM3head-.1, r2=rM3head+.2, h=4, $fn=RES/2);
        
-        //slot for arm
-        translate([0,0,Zlever]) {
-            hull() {
-                translate([10,-10]) cylinder(r=5,h=Tlever+2,center=true,$fn=RES);
-                translate([10,0]) rotate(10) scale([6,3,1])
-                    cylinder(r=1,h=Tlever+2,center=true,$fn=RES);
-                translate([28,-14]) cylinder(r=.1,h=Tlever+2,center=true,$fn=3);
-            }
+    //slot for arm
+    translate([0,0,Zlever]) {
+        hull() {
+            translate([10,-10]) cylinder(r=5,h=Tlever+1,center=true,$fn=RES);
+            translate([10,0]) rotate(10) scale([6,3,1])
+                cylinder(r=1,h=Tlever+1,center=true,$fn=RES);
+            translate([28,-14]) cylinder(r=.1,h=Tlever+1,center=true,$fn=3);
+        }
             
-            // clearance for possible socket-head bolt(s) on idler
-            //*translate([10,-10]) rotate(50)
-            //    rotate_extrude(angle=50,$fn=RES) translate([7,0])
-            //        square([5.5+1,Tlever+2+2*3+1],center=true);
-            translate([10,-10]) hull() for(a=[75:10:95]) rotate(a) translate([7,0])
-                cylinder(r=3,h=Tlever+2+2*3+1,center=true,$fn=RES/2);
-        }
-        
-        #translate([6,0,Zlever]) {
-            // hole for filament
-            rotate([-90,0,0]) cylinder(r=1,h=40,$fn=RES/2);
-            rotate([-90,0,0]) translate([0,0,6]) cylinder(r2=1,r1=3,h=7,$fn=RES/2);
-
-            // bowden hose fitting mount
-            translate([0,14.5]) rotate([-90,0,0])
-                cylinder(r1=2.25-.05, r2=2.9+.2, h=4.4+1, $fn=RES/2);
-        }
-        
-        // incoming filament hole
-        #rotate(-7) translate([6,0,Zlever])
-            rotate([ 90,0,0]) cylinder(r=1.2,h=40,$fn=RES/2);
-        
-        //translate([0,-50,18]) cube(100);
+        // clearance for possible socket-head bolt(s) on idler
+        //*translate([10,-10]) rotate(50)
+        //    rotate_extrude(angle=50,$fn=RES) translate([7,0])
+        //        square([5.5+1,Tlever+1+2*3+1],center=true);
+        translate([10,-10]) hull() for(a=[75:10:95]) rotate(a) translate([7,0])
+            cylinder(r=3,h=Tlever+1+2*3+1,center=true,$fn=RES/2);
     }
+        
+    translate([6,0,Zlever]) {
+        // hole for filament
+        #rotate([-90,0,0]) cylinder(r=1,h=40,$fn=RES/2);
+        rotate([-90,0,0]) translate([0,0,6]) cylinder(r2=1,r1=3,h=7,$fn=RES/2);
+
+        // bowden hose fitting mount
+        translate([0,14.5]) rotate([-90,0,0])
+            cylinder(r1=2.25-.05, r2=2.9+.2, h=4.4+1, $fn=RES/2);
+    }
+        
+    // incoming filament hole
+    translate([6,0,Zlever]) rotate([ 90,0,FilamentIncomingAngle]) {
+        #cylinder(r=1.2,h=40,$fn=RES/2);
+        translate([0,0,15]) cylinder(r1=1.2, r2=3, h=6, $fn=RES/2);
+    }
+//translate([0,-50,18]) cube(100);
+}
 
 
 // drawing I got had spacing of 19.8

@@ -51,5 +51,5 @@ end
 function gp = setTetraEndstop(p,igp)
     gp = igp.p;
     gp.position_endstops = p;
-    gp = getTetraParams(gp);  % re-build kinetic parameters
+    gp = getTetraParams(gp);  % re-build kinematic parameters
 end

@@ -50,7 +50,7 @@ function cfg = loadKlipperCfg(filename)
     % --- Section header  [section name] ------------------------------------
     tok = regexp(line, '^\[([^\]]+)\]', 'tokens', 'once');
     if ~isempty(tok)
-      current_section = sanitize_name(strtrim(tok{1}))
+      current_section = sanitize_name(strtrim(tok{1}));
       current_key     = '';
       if ~isfield(cfg, current_section)
         cfg.(current_section) = struct();
