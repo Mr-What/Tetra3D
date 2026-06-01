@@ -37,26 +37,6 @@ module fan3010() difference() {  // labeled 3007, but 8mm thick!
     }
 }
 
-// tight holes to force-screw M3 into plastic
-//translate([0,0,-50]) difference() { fan30screwMount(); #fan30holes();}
-module fan30screwMount(h=20) { %translate([0,0,-10]) fan3010();
-    //difference() {
-    //    union() {
-            for(a=[45:90:355]) rotate(a) translate([12*sqrt(2),0,0]) hull() {
-                cylinder(r1=4,r2=5,h=8,$fn=RES/2);
-                translate([-4,0,2]) cube([1,12,4],center=true);
-            }
-            cylinder(r=15,h=h,$fn=RES*1.5);
-    //    }
-    //    //translate([0,0,3]) pairX(12) pairY(12) cylinder(d=5.5,h=6,$fn=RES/2);
-    //    translate([0,0,-1]) {
-    //        pairX(12) pairY(12) cylinder(r=1.45,h=12,$fn=RES/2);
-    //        cylinder(d=27,h=h+2,$fn=RES*1.5);
-    //    }
-    //    fan30holes();
-    //} 
-           
-}
 module fan30holes(r=1.5,h=40) translate([0,0,-1]) {
     pairX(12) pairY(12) cylinder(r=r,h=h,$fn=24);
     cylinder(d=27,h=h,$fn=64);

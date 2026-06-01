@@ -7,7 +7,7 @@ dMag = 6; //10;  // Actually like 9.8 to 9.9, but I have them .2ish fuzz factor
 tMag = 3; //2.6;  // would prefer 3mm thick, but this is what I have
 zMag = 11.5;  // offset for magnet assembly
 
-rBase = 23.2;
+rBase = 25;
 wHorns = 40;  // must match the width between arm-mount horns on carriage
 
 // angle on mount.  usually 45, but it can differ
@@ -25,8 +25,8 @@ effector();
 //}
 //effectorBody();
 //translate([0,0,35+$t*15]) cube([90,90,h80],center=true);
-//translate([-50,-50,0]) cube(100);
-//translate([0,0,-10]) rotate(-210) cube(50);
+//translate([0,-125,-10]) cube(100);
+//translate([0,-80,-10]) rotate(-210) cube(50);
 //}
 
 use <util.scad>;
@@ -44,8 +44,8 @@ module hotEndFrame() difference() {
         
         for(a=[90:120:355]) rotate(a) {
             translate([rBase, 0, zMag])
-                rotate([0,-30,0]) {
-                    cylinder(d1=dBall-.5,d2=4,h=20,$fn=RES);
+                rotate([0,-35,0]) {
+                    cylinder(d1=dBall-.5,d2=5,h=20,$fn=RES);
                 }
         }
         
@@ -86,47 +86,67 @@ module effector() difference() { effectorBody();
     airDucts();  // for part cooling fan
     
     translate([0,0,zMag]) onMag() #mag(d=dMag+.2);
+    
+    //bevil horn edges
+    for (a=[90:120:355]) rotate(a) translate([rBase+18,0,6])
+        rotate([0,45,0]) cube([10,50,10],center=true);
+    for (a=[90:120:355]) rotate(a) translate([rBase+19,0,-6])
+        rotate([0,40,0]) cube([10,50,10],center=true);
+    
+    // cut down corners of part fan duct. 
+    //   this is an area which may interfere with horns
+    translate([-19,-38.5,10]) cylinder(r=10,h=20,$fn=4);
 }
 
-module armBolts() onMount(rBase+7) rotate([90,0,0])
+module armBolts() onMount(rBase+10) rotate([90,0,0])
     cylinder(r=1.55,h=41,center=true,$fn=RES/2);
 
-//translate([0,0,-30]) { %airDucts(); #armBolts(); }
-module airDucts() difference() { airDuctsWhole();
-    // remove unnecessary section
-    translate([0,rBase+12,0]) cube(40,center=true);
-}
-module partFanDuctJoint() translate([0,-rBase-4.5,10])
-    pairX(9) sphere(3.5,$fn=RES/2);
+//module airDucts() difference() { airDuctsWhole();
+//    // remove unnecessary section
+//    translate([0,rBase+12,0]) cube(40,center=true);
+//}
+module partFanDuctJoint() translate([0,-rBase-1,12])
+    pairX(7) sphere(3.5,$fn=RES/2);
 
-module airDuctsWhole() {
+//translate([0,0,-30]) { %airDucts(); %armBolts(); }
+//module airDuctsWhole() {
+module airDucts() {
     for(a=[0:120:355]) rotate(a) {
-        translate([0,-rBase+3,-3.5]) rotate([90,0,90])
-            linear_extrude(38,center=true) polygon([
+        translate([0,-rBase+1.7,-3.5]) rotate([90,0,90])
+            linear_extrude(46,center=true) polygon([
                 [-3,0],[-2.5,5],[0,7],[2.5,5],[3,0]]);
        
-        translate([0,rBase,-3.5]) rotate([90,0,90]) 
-            linear_extrude(20,center=true) polygon([
-                [-5,0],[-3.5,5],[-1,7],[3,5],[4,2],[6,0]]);
+        translate([0,rBase+5,-3.5]) rotate([90,0,90]) 
+            linear_extrude(25,center=true) polygon([
+                [-1.5,0],[-4,3],[-4,5],[-1,7],[4,4],[6,0]]);
+                //[-1.5,0],[-4,3],[-4,5],[-1,7],[2,5],[3,2],[5,0]]);
     }
     
     // part fan
     hull() { partFanDuctJoint();
-        translate([0,-rBase-4.5,17]) cube([19.5,8,.1],center=true); }
+        // 3010 blower hole is 20x7.4, 2.6mm in from edge
+        translate([-2.7,-rBase-3.2,19]) cube([19.5,7.2,.1],center=true); }
     hull() { partFanDuctJoint();
-        translate([0,-rBase+3.5, 0]) cube([32,3,1],center=true);  }
+        translate([0,-rBase+1.5,-2.5]) cube([34,4.5,1],center=true);  }
     
     // outlets
-    translate([0,-rBase,0]) hull() {
-        translate([0,10,-6]) cube([8,1,2],center=true);
-        translate([0,2,3]) cube([10,1,3],center=true);
-    }
-    mirrorX() rotate(60)
-    hull() translate([0,rBase,0]) {
-        translate([0,-12,-7]) cube([12,1,2],center=true);
-        translate([0,-5,-.5]) cube([14,.1,4],center=true);
-    }
+    //translate([0,-rBase+2,0]) hull() {
+    //    translate([0,10,-6]) cube([8,1,2],center=true);
+    //    translate([0,2,3]) cube([10,1,3],center=true);
+    //}
+    //mirrorX() rotate(60)
+    //hull() translate([0,rBase-2,0]) {
+    //    translate([0,-12,-7]) cube([12,1,2],center=true);
+    //    translate([0,-5,-.5]) cube([14,.1,4],center=true);
+    //}
+    outlet(10);
+    for(a=[-120,120]) rotate(a) outlet(8);
 }
+module outlet(w) hull() {
+    translate([0,rBase-5  ,-8]) cube([w+2,4,1],center=true);
+    translate([0,rBase+3, -.5]) cube([w,4,4],center=true);
+}
+
 
 module outerBrace(len=50) rotate([90,0,180])
     linear_extrude(len,center=true)
@@ -137,40 +157,64 @@ module outerBrace(len=50) rotate([90,0,180])
 module effectorBody() union() {
     translate([0,0,zMag]) onMag() magMount();
         
-    onMount(rBase+7) mountHorns();
+    onMount(rBase+10) mountHorns();
 
-    for(a=[30:120:355]) rotate(a) translate([rBase,0,-5])
-        outerBrace(36);        
-    for(a=[90:120:355]) rotate(a) translate([rBase+4.5,0,-3.5]) hornBrace(20);
+    for(a=[30:120:355]) rotate(a) translate([rBase+1,0,-5])
+        outerBrace(45);        
+    for(a=[90:120:355]) rotate(a) translate([rBase+2.5+5,0,-3.5])
+        hornBrace(26);
 
-    translate([0,-rBase-4,11]) partFanDuct();
+    translate([0,-rBase-1,12]) partFanDuct();
 }
 
-module partFanDuct() {    // part fan duct
-    hull() { pairX(8) sphere(6,$fn=RES);
-        translate([0,0,5]) cube([21+2,12,1],center=true); }
-    hull() { pairX(8) sphere(6,$fn=RES);
-        translate([0,8,-13]) pairX(17) cylinder(r=3,$fn=RES/2); }
-
-    // fan mount
-    translate([-9.3,6,9]) rotate([90,0,0]) difference() {
-        hull() {
-            translate([-3,-4]) cube(2);
-            translate([0,-8,.5]) cube(1.5);
-            translate([24,0]) cylinder(d=6,h=2,$fn=RES/2);
-            translate([20,-12]) cube(2);
-            translate([0,24]) cylinder(d=6,h=2,$fn=RES/2);
-        }
-        translate([24,0]) cylinder(r=1.3,h=6,$fn=RES/3,center=true);
-        translate([0,24]) cylinder(r=1.3,h=6,$fn=RES/3,center=true);
+//translate([0,0,-50]) blowerMount30Base();
+module blowerMount30Base() union() {
+    hull() {
+        translate([-2,-4]) cube(2);
+        translate([24,0]) cylinder(d=6,h=2,$fn=RES/2);
+        translate([16,-10]) cube(2);
+        translate([0,24]) cylinder(d=6,h=2,$fn=RES/2);
     }
-    %translate([2.7,4,21]) rotate([90,0,0]) fan3010();
+    translate([24,0,-2]) hull() {
+        cylinder(r1=2.5, r2=4,h=4, $fn=RES/2);
+        translate([-10,-18,2]) cube(2);
+        translate([-10, 7,2]) cube(2);
+    }
+    translate([0,24,-1]) {
+        hull() {
+            translate([-1,0,-1]) cylinder(r1=4, r2=5,h=4, $fn=RES/2);
+            translate([  -4,-48,-3]) cylinder(r=2,h=6,$fn=6);
+        }
+        hull() {
+            translate([-5.6,-44,3.5]) pairZ(3) sphere(2.5,$fn=RES/2);
+            translate([-5.6,  2,4]) pairZ(2) sphere(2.5,$fn=RES/2);
+        }
+    }
+}
+    
+module pfdJoint() translate([0,0,-1]) pairX(8) sphere(5.5,$fn=RES);
+module partFanDuct() {    // part fan duct
+    hull() { pfdJoint();
+        translate([-2,-1,6]) cube([34,12,1],center=true); }
+    #hull() { pfdJoint();
+        translate([0,2.5,-15]) pairX(16) cylinder(r=4,h=4,$fn=RES/2); }
+        
+    // fan mount
+        //%translate([0,-50,20]) cube([30,1,50],center=true);
+    translate([-9.3-2.7,5,9.5]) rotate([90,0,0]) difference() {
+        blowerMount30Base();
+        
+        // mount holes  fan hole diameter 1.8
+        // make for force thread on M2
+        translate([24,0]) cylinder(r=.95,h=12,$fn=RES/3,center=true);
+        translate([0,24]) cylinder(r=.95,h=6, $fn=RES/3,center=true);
+    }
+    %translate([0,3,21.5]) rotate([90,0,0]) fan3010();
 }
 
-//translate([0,0,-30]) hornBrace(22);
 module hornBrace(len=20) rotate([0,0,180]) hull() {
-    translate([0,  0, 8.35]) cube([15,len,.3],center=true);
-    translate([2.5,0,-1.35]) cube([20,len,.3],center=true);
+    translate([2.5,0, 7.5 ]) cube([20,len, 2],center=true);
+    translate([-1,  0,-1.35]) cube([13,len,.3],center=true);
 }
 
 module mountHorns() mirrorY(wHorns/2) hull() { rotate([90,0,0])
@@ -259,16 +303,18 @@ module fan40mount(h=20) { %translate([0,0,-10]) fan40();
 }
 
 // put magnet face at z=0
-module magMount() hull() {
-    %translate([0,0,dBall/2]) sphere(d=dBall,$fn=30);
-    //difference() {
-    // expose top 1.5mm of magnet
+module magMount() difference() {
+    hull() {
+        // expose top 1.5mm of magnet
         translate([0,0,-tMag-2.5]) cylinder(r1=dMag/2+2, r2=dMag/2+1,
             h=tMag+1, $fn=RES);
-    //    #translate([0,-5,-8]) rotate([aMag,0,0]) cube([20,8,20],center=true);
-    //}
-    translate([0,3,-9]) rotate([aMag,0,0]) 
-        cube([dMag+4,sin(aMag)*dMag+4,.1],center=true);
+        translate([0,3,-9]) rotate([aMag,0,0]) 
+            cube([dMag+4,sin(aMag)*dMag+4,.1],center=true);
+    }
+    
+    translate([0,10,-12]) rotate([45,0,0]) cube(20,center=true);
+    
+    %translate([0,0,dBall/2]) sphere(d=dBall,$fn=30);
 }
 
 module ball(d=dBall) sphere(d=d,$fn=RES);
