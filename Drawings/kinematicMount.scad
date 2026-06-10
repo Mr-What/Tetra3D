@@ -87,12 +87,6 @@ module effector() difference() { effectorBody();
     
     translate([0,0,zMag]) onMag() #mag(d=dMag+.2);
     
-    //bevil horn edges
-    for (a=[90:120:355]) rotate(a) translate([rBase+18,0,6])
-        rotate([0,45,0]) cube([10,50,10],center=true);
-    for (a=[90:120:355]) rotate(a) translate([rBase+19,0,-6])
-        rotate([0,40,0]) cube([10,50,10],center=true);
-    
     // cut down corners of part fan duct. 
     //   this is an area which may interfere with horns
     translate([-19,-38.5,10]) cylinder(r=10,h=20,$fn=4);
@@ -148,9 +142,13 @@ module outlet(w) hull() {
 }
 
 
-module outerBrace(len=50) rotate([90,0,180])
+//translate([0,0,-50]) { %outerBrace1(); outerBrace(); }
+module outerBrace1(len=50) rotate([90,0,180])
     linear_extrude(len,center=true)
         polygon([[-2,0], [-1,9], [0,10], [6,10],[8,0]]);
+module outerBrace(len=50) rotate([90,-18,0]) hull() {
+    cylinder(r=7,h=len,$fn=5,center=true);
+    cylinder(r=2,h=len+8,$fn=5,center=true);}
 
 //translate([0,0,-30]) outerBrace();
 //translate([0,0,100]) { %magMount(); rotate([-aMag,0,0]) magMount(); }
@@ -159,8 +157,10 @@ module effectorBody() union() {
         
     onMount(rBase+10) mountHorns();
 
-    for(a=[30:120:355]) rotate(a) translate([rBase+1,0,-5])
-        outerBrace(45);        
+    //%for(a=[30:120:355]) rotate(a) translate([rBase+1,0,-5])
+    //    outerBrace1(45);        
+    for(a=[30:120:355]) rotate(a) translate([rBase-2,0,.663])  //-.146 for r=5
+        outerBrace(43);        
     for(a=[90:120:355]) rotate(a) translate([rBase+2.5+5,0,-3.5])
         hornBrace(26);
 
@@ -196,7 +196,7 @@ module pfdJoint() translate([0,0,-1]) pairX(8) sphere(5.5,$fn=RES);
 module partFanDuct() {    // part fan duct
     hull() { pfdJoint();
         translate([-2,-1,6]) cube([34,12,1],center=true); }
-    #hull() { pfdJoint();
+    hull() { pfdJoint();
         translate([0,2.5,-15]) pairX(16) cylinder(r=4,h=4,$fn=RES/2); }
         
     // fan mount
@@ -213,48 +213,14 @@ module partFanDuct() {    // part fan duct
 }
 
 module hornBrace(len=20) rotate([0,0,180]) hull() {
-    translate([2.5,0, 7.5 ]) cube([20,len, 2],center=true);
-    translate([-1,  0,-1.35]) cube([13,len,.3],center=true);
+    translate([2.5+2,0, 7.5 ]) cube([16,len, 2],center=true);
+    translate([-1+1,  0,-1.2]) cube([10,len,.6],center=true);
 }
 
-module mountHorns() mirrorY(wHorns/2) hull() { rotate([90,0,0])
-    cylinder(r1=2.5, r2=4, h=3, $fn=RES);
-    translate([0,-12,0]) cube(10,center=true);
+module mountHorns() rotate([90,0,0]) hull() {
+    mirrorZ(-wHorns/2) cylinder(r1=2.5, r2=4, h=3, $fn=RES);
+    cylinder(r=5/cos(30),h=wHorns*.7,$fn=6,center=true);
 }
-
-/* util
-
-module fan40() difference() {
-    hull() pairX(16) pairY(16) cylinder(r=4, h=10,$fn=36);
-    translate([0,0,-1]) {
-       pairX(16) pairY(16) cylinder(r=1.5,h=12,$fn=24);
-    //pairX(16) pairY(16) cylinder(d=3,h=11,center=true,$fn=24);
-       cylinder(d=38,h=12,$fn=48);
-    }
-}
-module fan30() difference() {  // labeled 3007, but 8mm thick!
-    translate([0,0,4]) cube([30,30,8],center=true);
-    translate([0,0,-1]) {
-       pairX(12) pairY(12) cylinder(r=1.5,h=12,$fn=24);
-    //pairX(16) pairY(16) cylinder(d=3,h=11,center=true,$fn=24);
-       cylinder(d=28,h=12,$fn=48);
-    }
-}
-module fan3010() difference() {  // labeled 3007, but 8mm thick!
-    translate([0,0,5]) cube([30,30,10],center=true);
-    translate([0,0,-1]) {
-       pairX(12) pairY(12) cylinder(r=1.5,h=12,$fn=24);
-    //pairX(16) pairY(16) cylinder(d=3,h=11,center=true,$fn=24);
-       cylinder(d=28,h=12,$fn=48);
-    }
-}
-
-module fan30holes(r=1.5,h=40) translate([0,0,-1]) {
-    pairX(12) pairY(12) cylinder(r=r,h=h,$fn=RES/2);
-    cylinder(d=27,h=h,$fn=RES*1.5);
-    translate([0,0,-5]) cube([30,30,10],center=true);
-}
-*/
 
 // tight holes to force-screw M3 into plastic
 //translate([0,0,-50]) difference() { fan30screwMount(); #fan30holes();}
