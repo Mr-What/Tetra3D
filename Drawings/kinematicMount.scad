@@ -15,7 +15,11 @@ wHorns = 40;  // must match the width between arm-mount horns on carriage
 // <45 for more XY stability at the expense of less Z holding force
 aMag = 45;
 
-%hotEndFrame();
+//rotate([-90,0,0])
+%translate([-1.75,-10,-12])
+switchMount();
+
+//%hotEndFrame();
 //difference() {
 effector();
 //rotate(180) translate([-50,-50,30]) cube(100);
@@ -34,6 +38,7 @@ use <hotEnd.scad>;
 %translate([0,0,10]) rotate(180) hotEnd();
 
 //%translate([0,0,12]) onMount() ball();
+
 
 module hotEndFrame() difference() {
     union() {
@@ -90,6 +95,97 @@ module effector() difference() { effectorBody();
     // cut down corners of part fan duct. 
     //   this is an area which may interfere with horns
     translate([-19,-38.5,10]) cylinder(r=10,h=20,$fn=4);
+
+    // these intersect frame, so must drill out after body
+    switchMountRxMagnetHoles();
+}
+
+//%translate([-1.75,-10,-12]) nanoSwitch();
+module switchMount() { %nanoSwitch();
+    difference() {
+        union() {
+            translate([0,-3,10.4]) rotate([90,0,0])
+                switchMountTip();
+            hull() {
+                translate([0,-4.25,10]) cube([1,2.5,1],center=true);
+                translate([0,-4.25,6]) {
+                    cube([11,2.5,1],center=true);
+                    translate([0,0,-4]) pairX(4.5) rotate([90,0,0])
+                        cylinder(d2=2,d1=3,h=2.5,center=true,$fn=RES/2);
+                }
+            }
+            hull() {
+                translate([0,-4.25,6-4]) pairX(4.5) rotate([90,0,0])
+                        cylinder(d2=2,d1=3,h=2.5,center=true,$fn=RES/2);
+                translate([0,-8.5,6.7]) pairX(5) cylinder(d=6,h=.3,$fn=RES/2);
+            }
+        }
+    // inverse taper the magnet pair sockets so they fit cleanly
+    // to the bottom for glue mount.  Had trouble with printer
+    // kind of 'fillet'ing the bottom corners, so magnet did
+    // not have a tight, aligned seat.
+    #translate([0,-8.5,6.4]) pairX(4) cylinder(d1=3.2, d2=3.1,h=1,$fn=RES/2);
+    #translate([0,-5.5,10.4]) rotate([-90,0,0]) magnet3x1hole();
+    #translate([0,0,5.7]) pairX(3) rotate([90,0,0])  // M2 screw holes, self-tap
+        cylinder(d1=2.2,d2=1.7,h=7,$fn=RES/2);
+}}
+    
+//translate([0,0,-30]) outerBrace();
+//translate([0,0,100]) { %magMount(); rotate([-aMag,0,0]) magMount(); }
+PosSwitchRx  = [-1.75,-15.4,-5];
+PosSwitchMag = [0,-3.1,-0.2];
+module effectorBody() union() {
+    translate([0,0,zMag]) onMag() magMount();
+        
+    onMount(rBase+10) mountHorns();
+
+    //%for(a=[30:120:355]) rotate(a) translate([rBase+1,0,-5])
+    //    outerBrace1(45);        
+    for(a=[30:120:355]) rotate(a) translate([rBase-2,0,.663])  //-.146 for r=5
+        outerBrace(43);        
+    for(a=[90:120:355]) rotate(a) translate([rBase+2.5+5,0,-3.5])
+        hornBrace(26);
+
+    translate(PosSwitchRx) switchMountRx();
+    
+    translate([0,-rBase-1,12]) partFanDuct();
+}
+
+
+module switchMountRxMagnetHoles(p=PosSwitchRx) translate(p)
+    translate(PosSwitchMag) pairX(4)
+        cylinder(d1=3.2, d2=3, h=1.6, $fn=RES/2);  // double size hole
+
+//translate([0,0,-50])
+//switchMountCatch();
+//switchMountTip();
+module switchMountTip(fuzz=0) //{ difference() {
+    //intersection() {
+      //  cube([7,18,8],center=true);
+        translate([0,0,-fuzz])
+            cylinder(d1=3+fuzz,d2=8+fuzz,h=2.5+2*fuzz,$fn=RES);
+    //}
+//    translate([0,0,.97]) magnet3x1hole();
+//}
+module switchMountCatch() difference() {
+    translate([0,2,0]) cylinder(d1=5,d2=9,h=4,$fn=RES);
+    translate([0,.5,0]) switchMountTip(.15);
+}
+
+module switchMountRx() difference() {
+    union() {
+        hull() {
+            translate([0,-3.1,0]) pairX(5) cylinder(d=6,h=3,$fn=RES/2);
+            translate([0,0,7.2]) rotate([90,0,0]) cylinder(d=1,h=5,$fn=4);
+        }
+        
+        // capture tip of switchMount
+        translate([0,1.9,3]) rotate([90,0,0]) switchMountCatch();
+    }
+    
+    %switchMountRxMagnetHoles([0,0,0]);
+    translate([0,0,3]) rotate([90,0,0]) 
+        cylinder(d1=3.1, d2=2.9,h=1.1,$fn=RES/2);
 }
 
 module armBolts() onMount(rBase+10) rotate([90,0,0])
@@ -150,23 +246,6 @@ module outerBrace(len=50) rotate([90,-18,0]) hull() {
     cylinder(r=7,h=len,$fn=5,center=true);
     cylinder(r=2,h=len+8,$fn=5,center=true);}
 
-//translate([0,0,-30]) outerBrace();
-//translate([0,0,100]) { %magMount(); rotate([-aMag,0,0]) magMount(); }
-module effectorBody() union() {
-    translate([0,0,zMag]) onMag() magMount();
-        
-    onMount(rBase+10) mountHorns();
-
-    //%for(a=[30:120:355]) rotate(a) translate([rBase+1,0,-5])
-    //    outerBrace1(45);        
-    for(a=[30:120:355]) rotate(a) translate([rBase-2,0,.663])  //-.146 for r=5
-        outerBrace(43);        
-    for(a=[90:120:355]) rotate(a) translate([rBase+2.5+5,0,-3.5])
-        hornBrace(26);
-
-    translate([0,-rBase-1,12]) partFanDuct();
-}
-
 //translate([0,0,-50]) blowerMount30Base();
 module blowerMount30Base() union() {
     hull() {
@@ -191,9 +270,14 @@ module blowerMount30Base() union() {
         }
     }
 }
-    
+
+module magnet3x1() cylinder(d=2.8,h=2.8/3,$fn=16);  // true size
+module magnet3x1hole() translate([0,0,-.1])
+    cylinder(d1=3.2, d2=3.05,h=.2+2.8/3,$fn=RES/2);  // slightly expanded for holes
+    //cylinder(d1=2.9, d2=3.05,h=.2+2.8/3,$fn=RES/2);  // slightly expanded for holes
+
 module pfdJoint() translate([0,0,-1]) pairX(8) sphere(5.5,$fn=RES);
-module partFanDuct() {    // part fan duct
+module partFanDuct30() {    // part fan duct, 3010 blower
     hull() { pfdJoint();
         translate([-2,-1,6]) cube([34,12,1],center=true); }
     hull() { pfdJoint();
@@ -210,6 +294,32 @@ module partFanDuct() {    // part fan duct
         translate([0,24]) cylinder(r=.95,h=6, $fn=RES/3,center=true);
     }
     %translate([0,3,21.5]) rotate([90,0,0]) fan3010();
+}
+module partFanDuct() {    // part fan duct 4020 blower
+    hull() { pfdJoint();
+        translate([0.5,-9-1,23.45]) cube([20,30,1],center=true); }
+    hull() { pfdJoint();
+        translate([0,2.5,-15]) pairX(16) cylinder(r=4,h=4,$fn=RES/2); }
+        
+    // fan mount
+        //%translate([0,-50,20]) cube([30,1,50],center=true);
+    //translate([-9.3-2.7,5,9.5]) rotate([90,0,0]) difference() {
+    //    blowerMount30Base();
+    translate([10,-16,45]) difference() {
+        rotate([0,90,0]) hull() {
+            pairX(35/2-.5) pairY(35/2-.5) cylinder(r1=3.5,r2=5,h=3,$fn=RES/2);
+            translate([30,18,0]) cube(3);
+        }
+
+        #rotate([90,0,90]) on4020bolts()
+            cylinder(d=3+  .2,h=33,$fn=RES/2,center=true);
+    }
+        // mount holes  fan hole diameter 1.8
+        // make for force thread on M2
+    //    translate([24,0]) cylinder(r=.95,h=12,$fn=RES/3,center=true);
+    //    translate([0,24]) cylinder(r=.95,h=6, $fn=RES/3,center=true);
+    //}
+    %translate([10,-16,45]) rotate([0,90,180]) blower4020();
 }
 
 module hornBrace(len=20) rotate([0,0,180]) hull() {
