@@ -52,7 +52,7 @@ module microswitchEndstop20v(fuzz) {
         armMount() ;
     }
     //%translate([0,8.3,7]) // switch got in way of belt here, move to dfferent location
-    %translate([7.8,6.3,7]) rotate([0,180,0]) microswitch();
+    %translate([7.8,6.6,7]) rotate([0,180,0]) microswitch();
   
     difference() {
         union() { translate([0,1.65-4,0]) hull() {
@@ -60,19 +60,19 @@ module microswitchEndstop20v(fuzz) {
                 translate([-8,0,24]) sphere(2,$fn=RES);
                 translate([ 8,0,24]) sphere(2,$fn=RES);
                 translate([16,0,12]) sphere(2,$fn=RES);
-                translate([-8,0, 2]) sphere(2,$fn=RES);
-                translate([16,0, 2]) sphere(2,$fn=RES);
+                translate([-8,0, 3.5]) sphere(2,$fn=RES);
+                translate([16,0, 3.5]) sphere(2,$fn=RES);
             }
-            translate([0,3.6,0]) {
+            translate([0,4,0]) {
                 translate([-7,0,22]) sphere(2,$fn=RES);
                 translate([ 5,0,22]) sphere(2,$fn=RES);
                 translate([15,0,10]) sphere(2,$fn=RES);
-                translate([-7,0, 2]) sphere(2,$fn=RES);
-                translate([15,0, 2]) sphere(2,$fn=RES);
+                translate([-7,0,3.5]) sphere(2,$fn=RES);
+                translate([15,0,3.5]) sphere(2,$fn=RES);
             }
             //pairX(10) pairY(3.6) pairZ(10) sphere(2,$fn=RES);
             }
-            translate([0,-9.5,7]) hull() pairZ(4) rotate([-90,0,0])
+            translate([0,-9.5,8.2]) hull() pairZ(3) rotate([-90,0,0])
                 cylinder(r1=1.5,r2=2.5,h=3,$fn=RES/2);
         }
         

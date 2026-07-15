@@ -10,8 +10,17 @@ module mirrorZ(d=0) { translate([0,0,d]) children();
     mirror([0,0,1])   translate([0,0,d]) children(); }
 
 
-
-		
+//nanoSwitch();
+NanoSwitchOffset = 1.8;  // center of switch to center of trigger
+module nanoSwitch() { 
+    difference () {
+        translate([0,0,3.2]) cube([12.7,5.7,6.4],center=true); 
+        #translate([0,0,5.7]) rotate([90,0,0])
+            pairX(3) cylinder(d=2,h=8,$fn=16,center=true);
+    }
+    #for (d=[-5.25,0,5.25]) translate([d,0,6.3]) cube([.5,.5,4]);
+    #translate([NanoSwitchOffset,0,-.5]) cube([1,2.8,1],center=true);
+}
 module fan40() difference() {
     hull() pairX(16) pairY(16) cylinder(r=4, h=10,$fn=36);
     translate([0,0,-1]) {
@@ -38,7 +47,7 @@ module fan3010() difference() {  // labeled 3007, but 8mm thick!
 }
 
 module fan30holes(r=1.5,h=40) translate([0,0,-1]) {
-    pairX(12) pairY(12) cylinder(r=r,h=h,$fn=24);
+    #pairX(12) pairY(12) cylinder(r1=r+.15,r2=r-.2,h=h,$fn=24);
     cylinder(d=27,h=h,$fn=64);
     translate([0,0,-5]) cube([30,30,10],center=true);
 }

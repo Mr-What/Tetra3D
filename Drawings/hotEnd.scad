@@ -17,7 +17,7 @@ Dblock = 16; // nozzle NOT centered in +-D direction
 DsocketHeadM3 = 5.4;
 HsocketHeadM3 = 3;
 
-%hotEnd();
+hotEnd();
 
 %translate([0,20,43.35])
 rotate([0,90,-90])  // let face of carriage be y=0
@@ -27,18 +27,19 @@ railMGN7H();
 translate([0,0,Hbody-WtopFlange-Wmount/2])
 %retentionTab();
 
-translate([0,0,Hbody-WtopFlange-Wmount/2])
-hotEndMount();
+%translate([0,0,Hbody-WtopFlange-Wmount/2])
+hotEndMount(false);
 //} translate([0,0,53]) cube([80,80,20],center=true);}
 
 WmountBrace=14;
-module hotEndMount(withBrace=true) difference() {
+module hotEndMount(withBrace=true, carriageBase=true) difference() {
     union() {
-        translate([0,9,0]) rotate([90,0,0]) hull() pairX(WmountBrace) 
+        *translate([0,9,0]) rotate([90,0,0]) hull() pairX(WmountBrace) 
             cylinder(r=6.5,h=1,$fn=RES);
-        translate([0,10,0]) rotate([90,0,0]) hull() pairX(WmountBrace) 
-            cylinder(r=6.5,h=19,$fn=RES);
-        translate([0,20,0]) hull() {
+        baseLen = carriageBase ? 0 : 8.5;
+        translate([0,10+baseLen,0]) rotate([90,0,0]) hull() pairX(WmountBrace) 
+            cylinder(r=6.5,h=19+baseLen,$fn=RES);
+        if (carriageBase) translate([0,20,0]) hull() {
             pairX(6) pairZ(13) rotate([90,0,0])
                 cylinder(r=2,h=1,$fn=RES/2);
             translate([0,-11,0]) pairX(WmountBrace) rotate([90,0,0])
