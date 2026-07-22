@@ -46,3 +46,62 @@ Having already developed kinematic mounts,
 I completed the design to hold hot end on a kinematic mount.
 ![Image](./kinEffector.jpg "hot end on a kinematic mount")
 This effector has a removable probe switch and a kinematic mount for the hot end, which can be wired into a bed probe.
+
+### 260715
+
+I have not yet wired new complete kinematic hot end probe,
+but I ran a pressure test.  It got up to about 500g, then jumped down to about 450.  I think that might be where contact was broken.
+As I kept moving down, I saw it varying from 350 to 400.
+
+![Kinematic probe and hot end](./kinProbe+hotend260715.jpg "kinematic probe with hot end removed")
+
+Repeating with the proposed proxy probe, which has likely 306 or 304 balls as opposed to 440c on the complete nozzle assembly, I think the release force is perhaps a little over 28g.
+I don't know if I actually saw the release force, since it went from 0g to 28g in my shortest step of 0.025mm.
+The measured force stayed about the same from there.
+The mass of the probe is 16g, so I think I was seeing that
+plus about 10g of magnetic pre-load. 
+
+### 260720
+
+Noted belt slip on stepper A, even after new motor.
+In retrospect, I should have known.
+Marked belt and pulley position after `G28;G0 X0 Y0 Z150`.
+After a run, then `G0 X0 Y0 Z0` noted that dots did not align.
+After another `G28` dots aligned on the idler but not the pulley.
+The only way this could happen is if belt slipped.
+
+Cleaned pulley, replaced belt, and installed new
+idler tensioner.
+![Adjustable Idler](./adjustableIdler260720.jpg "Tensioning Idler Mount")
+I obtained a decent probe using switch.
+![repeatable probe](./probe49.svg "Probe repeatable, but significant tilt")
+It appears to be a clean tilt, indicating an error
+in stepper A endstop position.
+This is expected, after replacing much stepper A hardware.
+
+Ran with zero offset setting.
+Current switch offset measured at (0,-10,-2.2)
+from nozzle on kinematic mounted hot end.
+
+I plan to apply offset adjustment in analysis code.
+It is not clear that typical offset application is
+the best way to go with a delta.
+Errors are often X-Y dependant, primarily due to un-modeled
+effector tilt.
+It might be better to assume bed probe is at commanded X-Y,
+and accept that there will be a small Z error for the offset.
+We know that we are primarily measuring build imperfections.
+The plate could be assumed to be flat, but tilted to adjust.
+
+### 260721
+
+Could not get repeatability with light kinematic probe.
+
+I asked perplexity for what ball materials might be available between the very strongly magnetic 440c,
+and the weak magnetism of my light probe, likely a 304 or 316.
+It suggested a common carbon steel, like 52100,
+or ferritic stainless, like 430.
+
+Claude notes that magnitism drops significantly with a small gap.
+However, I still need conductivity, and hardness.
+Perhaps I can fabricate removable (or wired) non-magnetic face covers.
