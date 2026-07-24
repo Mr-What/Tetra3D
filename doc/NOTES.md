@@ -105,3 +105,11 @@ or ferritic stainless, like 430.
 Claude notes that magnitism drops significantly with a small gap.
 However, I still need conductivity, and hardness.
 Perhaps I can fabricate removable (or wired) non-magnetic face covers.
+
+### 260722
+
+Cleaned drive pulley A, new belt, and new adjustable belt
+tension device
+Did a bed level probe,
+![bed level probe](./bed51.png "bed level probe after probe 51")
+ and was able to print test pattern.
