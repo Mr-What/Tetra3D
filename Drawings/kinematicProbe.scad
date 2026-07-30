@@ -26,11 +26,11 @@ module kinematicProbe() difference() {
     translate([0,0,30.9]) cube([60,60,20],center=true);
         
     // show bolt for probe a little low, so there is room to grind a point
-    translate([0,0,-10-2]){
+    #translate([0,0,-12+8]){
         
         // use extra long bolt, so we can adjust at top with nut
         // bore for M3 bolt as probe
-        #cylinder(d=3,h=40,$fn=16);     // show bolt for probe
+        cylinder(d=3,h=40,$fn=16);     // show bolt for probe
         
         // *** use very long full-thread bolt so we can adjust depth
         // with nut at top
@@ -39,7 +39,7 @@ module kinematicProbe() difference() {
         //translate([0,0,25]) cylinder(d1=5.4,d2=6,h=9,$fn=RES/2);
 
         // actual M3 nuts tend to be about 5.9mm corner to corner
-        translate([0,0,6.5]) cylinder(d2=5.8, d1=6,h=3,$fn=6);
+        translate([0,0,6]) cylinder(d2=5.8, d1=6,h=3,$fn=6);
         
     }
     
@@ -50,16 +50,17 @@ module kinematicProbeFrame() union() {
     ballMounts(nf=RES);
     
     for (a=[90,210,330]) rotate(a) hull() {
-        translate([20,0,17]) sphere(5,$fn=RES);
-        //translate([6,0,15]) rotate([0,90,0]) cylinder(r=8,h=.1,$fn=5);
-        translate([4,0,21]) cube([.1,10,.1],center=true);
-        translate([6,0,0]) rotate([0,90,0]) cylinder(r=2,h=.1,$fn=RES/2);
+        translate([18,0,18]) sphere(5,$fn=RES);
+        translate([4,0,21]) cube([.1,16,.1],center=true);
+        #translate([6,0,2+4]) rotate([0,90,0]) cylinder(r=2,h=.1,$fn=RES/2);
     }
     
     // try to make bottom exactly level with effector bottom
-    %translate([0,0,-5]) cylinder(r1=8,r2=18,h=26,$fn=6);
-    hull() for(a=[0:60:355]) rotate(a) {
-        translate([ 4,0,-1]) sphere(4,$fn=RES);
-        translate([14,0,18]) #sphere(4,$fn=RES);
+    //%translate([0,0,-5]) cylinder(r1=8,r2=18,h=26,$fn=6);
+    hull() {
+        for(a=[90:120:355]) rotate(a) 
+            translate([16,0,22.9]) cylinder(r=4,h=.1,$fn=RES);
+        for(a=[0:60:355]) rotate(a) 
+            translate([ 5,0,-2.5+8]) sphere(2.5,$fn=RES);
     }
 }
