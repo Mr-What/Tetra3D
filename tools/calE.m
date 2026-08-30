@@ -1,6 +1,11 @@
 %  optimize endstops given ben probe data
-function gp = calE(logFile, gp0=[], measFile=[], measFileIdeal=[])
-    tp = loadCalData(logFile, measFile, measFileIdeal);
+function [gp,tp] = calE(logFile, gp0=[], measFile=[], measFileIdeal=[])
+    if ischar(logFile)
+        tp = loadCalData(logFile, measFile, measFileIdeal);
+    else
+        tp = logFile;  % it was already loaded
+    end
+
     gp = tetraRefineE(tp,gp0);
 
     up.position_endstops = gp.p.position_endstops;

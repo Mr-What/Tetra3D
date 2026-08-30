@@ -1,15 +1,22 @@
 % retrieve bed probe data and reduce
-% implement standard part of loading cal data
-function tp = getBedProbe(n=0, measFile=[], measFileIdeal=[])
+% implement standard procedure to load cal data
+function tp = getCalData(n=0, measFile=[], measFileIdeal=[])
     logFile = sprintf('probe%03d.log',n)
-    cmd=sprintf('ssh 192.168.2.66 ~pi/bin/tailLog.sh > %s',logFile)
-    system(cmd)
+    if exist(logFile, 'file') != 2
+        cmd=sprintf('ssh 192.168.2.66 ~pi/bin/tailLog.sh > %s',logFile)
+        system(cmd)
+    end
     tp = loadCalData(logFile, measFile, measFileIdeal);
-    cmd=sprintf('cp /tmp/probe.csv probe%03d.csv',n)
-    system(cmd)  % save to a file for future convenience
+    probeFile = sprintf('probe%03d.csv')
+    if exist(probeFile, 'file') != 2
+        cmd=sprintf('cp /tmp/probe.csv probe%03d.csv',n)
+        system(cmd)  % save to a file for future convenience
+    end
     probeSamplesFile = sprintf('probeSamples%03d.csv',n)
-    cmd=sprintf('../extractProbeSamples.pl < %s > %s',logFile,probeSamplesFile)
-    system(cmd)
+    if exist(probeSamplesFile, 'file') != 2
+        cmd=sprintf('../extractProbeSamples.pl < %s > %s',logFile,probeSamplesFile)
+        system(cmd)
+    end
     tp.probeSamples = load(probeSamplesFile);
     z = tp.probe(:,3);
     tp.bedMedian = median(z);

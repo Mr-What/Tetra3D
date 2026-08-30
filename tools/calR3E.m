@@ -1,15 +1,15 @@
 %  optimize delta_radius(3) and endstops given ben probe data
-function gp = calR3E(logFile, gpp)
-    tp = loadProbeDataFromKlipperLog(logFile);
-
-    % add XY data if you got it
-    %tp = appendTowerPositions(tp.p, probe, xyMeas, xyIdeal);
-
-    if nargin > 1
-        gp = tetraRefineR3E(tp,gpp)
+% My hypothesis is that with a tetrahedral delta, delta_radius
+% is highly correlated to endstop (radius changes with tilt angle along tower).
+% Hence, it is usually wise to optimize radius and endstops together. (ab)
+function [gp,tp] = calR3E(logFile, gpp=[], measFile=[], measFileIdeal=[])
+    if ischar(logFile)
+        tp = loadCalData(logFile, measFile, measFileIdeal);
     else
-        gp = tetraRefineR3E(tp)
+        tp = logFile;  % it was already loaded
     end
+    
+    gp = tetraRefineR3E(tp,gpp)
     
     % had small error when using measXY, when bed-only converted.
     % check by simulated annealing?
@@ -21,6 +21,6 @@ function gp = calR3E(logFile, gpp)
     % make a config parameter structure containing only stuff to be updated:
     up.position_endstops = gp.p.position_endstops;
     up.delta_radius = gp.p.delta_radius;
-    write_tilted_delta_update_cfg(up,'radiusEndstopUpdate.cfg');
-    system('cat radiusEndstopUpdate.cfg');
+    write_tilted_delta_update_cfg(up,'updateR3E.cfg');
+    system('cat updateR3E.cfg');
 end
