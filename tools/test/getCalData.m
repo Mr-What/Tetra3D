@@ -6,7 +6,7 @@ function tp = getCalData(n=0, measFile=[], measFileIdeal=[])
         cmd=sprintf('ssh 192.168.2.66 ~pi/bin/tailLog.sh > %s',logFile)
         system(cmd)
     end
-    tp = loadCalData(logFile, measFile, measFileIdeal);
+    [tp,cfg] = loadCalData(logFile, measFile, measFileIdeal);
     probeFile = sprintf('probe%03d.csv')
     if exist(probeFile, 'file') != 2
         cmd=sprintf('cp /tmp/probe.csv probe%03d.csv',n)
@@ -18,6 +18,7 @@ function tp = getCalData(n=0, measFile=[], measFileIdeal=[])
         system(cmd)
     end
     tp.probeSamples = load(probeSamplesFile);
+    tp.probe_offset = [cfg.probe.x_offset, cfg.probe.y_offset, cfg.probe.z_offset];
     z = tp.probe(:,3);
     tp.bedMedian = median(z);
     tp.bedMean   = mean(z);

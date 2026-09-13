@@ -17,16 +17,16 @@
 %             used in this optimization may not be the same as ones
 %             used for the original probe(s).
 %-
-function tp = tetraRefineZTE(PP,IGP, ...
+function tp = tetraRefineZTE(PP,IGP=[], ...
             initialStep = [.4,.4,.4, .2,.2,.2, .5,.5,.5], ...
             smallBox = ones(1,9) * .0001)
-    global callCount;
-    callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
+    global tetra;
+    tetra.callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
 
     % ----- initial data plot
     figure(2); [c,ax,pFit] = plotInitialProbe(PP.probe);
 
-    if nargin < 2
+    if isempty(IGP)
         gp = getTetraParams(PP.p);
     else
         gp = getTetraParams(IGP);

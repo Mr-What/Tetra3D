@@ -17,33 +17,44 @@
 %             used in this optimization may not be the same as ones
 %             used for the original probe(s).
 %-
-function tp = tetraRefineR3E(PP,IGP, ...
-                            initialStep = [1,1,1,1,1,1], ...
-                            smallBox = [.004,.004,.004,.004,.004,.004])
+function tp = tetraRefineRPAZTE(PP,IGP=[], ...
+            initialStep = [3,3,3, 2,2,2, 3,3,3,  2,2,2,  2,2,2, 2,2,2]/10, ...
+            smallBox = [2,2,2, 2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000)
     global tetra;
     tetra.callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
 
+    fprintf(1,'probe_offset=[%.3f,%.3f,%.3f]\n',PP.probe_offset);
+    
     % ----- initial data plot
     figure(2); [c,ax,pFit] = plotInitialProbe(PP.probe);
-
     if isempty(IGP)
         gp = getTetraParams(PP.p);
     else
         gp = getTetraParams(IGP);
+        
     end
     gp.verbose = 0;
 
-    initialGuess = [gp.p.delta_radius, gp.p.position_endstops];
-    maxIterations=666;
+    
+    initialGuess = [gp.p.delta_radius, ...
+                    gp.p.delta_angles, ...
+                    gp.p.arm_lengths, ...
+                    gp.p.tilt_radial, ...
+                    gp.p.tilt_tangential, ...
+                    gp.p.position_endstops];
+    maxIterations=2000;
+fields(PP);
     [fit,nEval,status,err] = SimplexMinimize(...
-        @(p) tetraFitErr(p,PP,gp,@setTetraRadius3Endstop),...
-   	initialGuess, initialStep, smallBox, maxIterations);
+        @(p) tetraFitErr(p,PP,gp,@setTetraRPAZTE),...
+   	initialGuess, initialStep, smallBox, maxIterations)
 
     % return refined tetra (tilted) parameter set
-    tp = setTetraRadius3Endstop(fit,gp);
+    tp = setTetraRPAZTE(fit,gp);
+    tp.err   = err;
+    tp.nEval = nEval;
 
     % plot parameter fit, retrieve full parameter vector(s)
-    [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,PP,gp,@setTetraRadius3Endstop);
+    [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,PP,gp,@setTetraRPAZTE);
     pf = PP.probe;  pf(:,3) = pf(:,3) + errZ;
     plot3(pf(:,1),pf(:,2),pf(:,3),'ro');
     legend('Parabolic Fit to measurements','Measured','Delta Fit Points');
@@ -54,9 +65,13 @@ function tp = tetraRefineR3E(PP,IGP, ...
 end
 
 % --- copy parameters from search vector over to kinetic param struct
-function gp = setTetraRadius3Endstop(p,igp)
+function gp = setTetraRPAZTE(p,igp)
     gp = igp.p;
     gp.delta_radius = p(1:3);
-    gp.position_endstops = p(4:6);
+    gp.delta_angles = p(4:6);
+    gp.arm_lengths = p(7:9);
+    gp.tilt_radial = p(10:12);
+    gp.tilt_tangential = p(13:15);
+    gp.position_endstops = p(16:18);
     gp = getTetraParams(gp);  % re-build kinematic params
 end

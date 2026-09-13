@@ -48,8 +48,9 @@ while(1)
         err = simplex(1).y;
         if (nEval > maxIter)
            status = -1;  % did not converge
-	    end
-	    return;
+        end
+        fprintf(1,'err = %9.6f ; nEval=%d\n',err,nEval);
+        return;
     end
 
     [simplex,nEval] = simplexUpdate(simplex,fcn,nEval);

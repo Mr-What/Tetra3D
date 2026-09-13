@@ -189,6 +189,7 @@ def merge(printer_lines, update_sections, section_order):
             # Check if this key is targeted by update.cfg for this section
             if (current_section in update_sections
                     and key not in applied[current_section]):
+
                 # Find the update entry for this key
                 update_entry = None
                 for ukey, ulines in update_sections[current_section]:
@@ -198,6 +199,9 @@ def merge(printer_lines, update_sections, section_order):
 
                 if update_entry is not None:
                     # Emit the replacement lines
+                    # comment out replaced line (ab multi-line not supported) :
+                    output.append(f"# {timestamp} {raw}")
+
                     for ul in update_entry:
                         output.append(ul + '\n')
                     applied[current_section].add(key)
@@ -294,7 +298,10 @@ def merge(printer_lines, update_sections, section_order):
 # Main
 # ---------------------------------------------------------------------------
 
+timestamp = "TBD"   # force timestamp to be global
+
 def main():
+    global timestamp
     if len(sys.argv) != 3:
         print("Usage: %s <printer.cfg> <update.cfg>" % sys.argv[0],
               file=sys.stderr)

@@ -1,77 +1,60 @@
-G90 ; absolute positions
-G21 ; mm
-M84
-M118 Make sure effector is over center of bed!!!
-M118 Heating...
-M109 S200 ; set extruder temp, and wait
-HOME
+PRINT_START EXTRUDER_TEMP=230  ; standard heat up, home, wipe nozzle for tetra
 
-M83 ; relative E (M82 for absolute E)
 G92 E0 ; set current extruder position to 0
-G0 X0 Y0 Z5 F6000
-
-; -- Delta startup pattern
-G0 X-42.5 Y-79.3 Z5 F6000
-G1 E6 F600
-G0 Z0.25
-G2 X-89.0 Y2.8 I42.5 J79.3 E7 F1200
-G3 X-49.9 Y-72.5 I89.0 J-2.8 E7
-G1 Z5 E-5
-G0 X42.5 Y-79.3 Z5 F6000
-G1 E6 F600
-G0 Z0.25
-G3 X89.0 Y2.8 I-42.5 J79.3 E7 F1200
-G2 X49.9 Y-72.5 I-89.0 J-2.8 E7
-G1 Z5 E-5
-G0 X-47.5 Y76.5 Z5 F6000
-G1 E6 F600
-G0 Z0.25
-G2 X46.9 Y75.6 I47.5 J-76.5 E7 F1200
-G3 X-37.8 Y79.5 I-46.9 J-75.6 E7
-G1 Z5 E-5
-G0 X0 Y0 Z10 F6000
-;--------- end of nozzle clearing procedure
+M83 ; relative position extrusion mode
+G92 E0 ; set current extruder position to 0
 
 ; For max_extrude_cross_section 1.0, max E is roughly 4mm / 10mm of movement.
+; To get a .6mm wide line at height 0.25mm needs 6.24 extrusion per 100mm line
+; r=80mm quarter arc, 126mm, ~ 8
+;   60                       ~ 6 ...
+;   10                       ~ 1
+; 10 mm line, ~ .6
+; 20 mm line, ~ 1.3 ...
 
 ;G0 X0 Y100
 ;G0 Z0.25 F2000
 ;G2 X100 Y0 I0 J-100 E9 F3000  ;1 CW, arc center(0,100-100) end at 100,0 start current pos
 ;G1 X80 E2
-G0 X80 Y0
-G0 Z0.25 F1000
+G0 X83 Y0 Z3 F3000
+G1 Z.1 E3 F1000 ; purge a little
+G0 X80 Y0 ; wipe
 
-G3 X0 Y80 I-80 J0 E4 ; CCW, R=80 80,0 to 0,80
-G1 Y60 E1
-G2 X60 Y0 I0 J-60 E1 ; E5; 3
-G1 X40 E1
-G3 X0 Y40 I-40 J0 E1 ;4; 4
-G1 Y30 E1
-G2 X30 Y0 I0 J-30 E1 ;4
-G1 X20 E1
+; quadrant I, try .6mm line at .25 height
+G0 Z0.25  ; set Z 
+G3 X0 Y80 I-80 J0 E8 ; CCW, R=80 80,0 to 0,80
+G1 Y60 E1.3
+G2 X60 Y0 I0 J-60 E6
+G1 X40 E1.3
+G3 X0 Y40 I-40 J0 E4
+G1 Y30 E.7
+G2 X30 Y0 I0 J-30 E3
+G1 X20 E.7
 G3 X0 Y20 I-20 J0 E2
-G1 Y10 E.5
+G1 Y10 E.7
 G2 X10 Y0 I0 J-10 E1
-G1 X0 Y0 E.5
+G1 X0 Y0 E.7
 ; end of quadrant I
-G1 Y-10 E.5
-G3 X10 Y0 I0 J10 E1
-G1 X20 E.5
-G2 X0 Y-20 I-20 J0 E2
-G1 Y-30 E.5
-G3 X30 Y0 I0 J30 E1 ;4
+
+; quadrant IV, fat?
+G1 Y-10 E2
+G3 X10 Y0 I0 J10 E2
+G1 X20 E1
+G2 X0 Y-20 I-20 J0 E3
+G1 Y-30 E1
+G3 X30 Y0 I0 J30 E4
 G1 X40 E1
-G2 X0 Y-40 I-40 J0 E1 ;6
+G2 X0 Y-40 I-40 J0 E5
 G1 Y-60 E2
-G3 X60 Y0 I0 J60 E1 ;7
+G3 X60 Y0 I0 J60 E8
 G1 X80 E2
-G2 X0 Y-80 I-80 J0 E1 ;8
+G2 X0 Y-80 I-80 J0 E11
 ;G1 Y-100 E2
 ;G3 X100 Y0 I0 J100 E9  ; end of right half-plane
 
-G0 Z2 F6000
+G0 Z2 E-5 F6000
 G0 X0 Y0
-G0 Z0.3
+G0 Z0.25 E5
 G1 Y10 E1 F3000
 G3 X-10 Y0 I0 J-10 E2
 G1 X-20 E1
@@ -79,38 +62,33 @@ G2 X0 Y20 I20 J0 E3
 G1 Y30 E1
 G3 X-30 Y0 I0 J-30 E4
 G1 X-40 E1
-G2 X0 Y40 I40 J0 E1 ;5
+G2 X0 Y40 I40 J0 E5
 G1 Y60 E2
-G3 X-60 Y0 I0 J-60 E1 ;6
+G3 X-60 Y0 I0 J-60 E8
 G1 X-80 E1
-G2 X0 Y80 I80 J0 E1 ;7
+G2 X0 Y80 I80 J0 E11
 
 ;G1 Y100 E1
 ;G3 X-100 Y0 I0 J-100 E9 ; end of Q II
 ;G1 X-80 E2
-G0 Z3
-G0 X-80 Y0
-G0 Z0.25
 
-G3 X0 Y-80 I80 J0 E7
+G0 Z3 E-3 F8000  ; extra purge here, tended to leave a line
+G0 X-80 Y0 E-5
+G0 Z0.25 E9
+G3 X0 Y-80 I80 J0 E12
 G1 Y-60 E2
-G2 X-60 Y0 I0 J60 E7
+G2 X-60 Y0 I0 J60 E10
 G1 X-40 E2
-G3 X0 Y-40 I40 J0 E6
+G3 X0 Y-40 I40 J0 E8
 G1 Y-30 E1
-G2 X-30 Y0 I0 J30 E5
+G2 X-30 Y0 I0 J30 E6
 G1 X-20 E1
-G3 X0 Y-20 I20 J0 E4
+G3 X0 Y-20 I20 J0 E5
 G1 Y-10 E1
-G2 X-10 Y0 I0 J10 E3 
+G2 X-10 Y0 I0 J10 E2 
 G1 X0 E1
-G0 Z2 F3000
+G0 Z2 F3000 E-3
 
-;G0 X0 Y-100 F8000
-;G0 Z0.3 F2000
-;G2 X-100 Y0 I0 J100 E9 F3000
-REL ; relative move, default 0,0,5
-G0 X0 Y0 Z150 E-5 F6000
-M84 ;  motors off
-M109 S0 ; extruder off
+PRINT_DONE
+
 

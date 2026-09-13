@@ -47,5 +47,5 @@ for i=2:n;
     lo(j) = simplex(i).p(j);
 end
 box = hi - lo;
-a = (length(find(hi - lo > smallBox)) <=  0);
+a = (length(find(box > smallBox)) <=  0);
 if (a), disp('smallbox'); end

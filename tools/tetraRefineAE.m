@@ -20,24 +20,24 @@
 function tp = tetraRefineAE(PP,IGP, ...
                             initialStep = [1,1,1,1,1,1], ...
                             smallBox = [.004,.004,.004,.004,.004,.004])
-    global callCount;
-    callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
+    global tetra
+    tetra.callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
 
     % ----- initial data plot
     figure(2); [c,ax,pFit] = plotInitialProbe(PP.probe);
 
-    if nargin < 2
+    if isempty(IGP)
         gp = getTetraParams(PP.p);
     else
         gp = getTetraParams(IGP);
     end
     gp.verbose = 0;
 
-    initialGuess = [gp.p.arm_lengths, gp.p.position_endstops]
+    initialGuess = [gp.p.arm_lengths, gp.p.position_endstops];
     maxIterations=666;
     [fit,nEval,status,err] = SimplexMinimize(...
         @(p) tetraFitErr(p,PP,gp,@setTetraAE),...
-   	initialGuess, initialStep, smallBox, maxIterations)
+   	initialGuess, initialStep, smallBox, maxIterations);
 
     % return refined tetra (tilted) parameter set
     tp = setTetraAE(fit,gp);

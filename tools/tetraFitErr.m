@@ -11,21 +11,43 @@
 %   igp        - Guess Parameters.  guess at better parameters
 %   fSetParams - function to make a new parameter struct, from p
 function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
+    global tetra;
+    tetra.callCount = tetra.callCount+1;
+
+    if !isfield(tetra,'echoMeas')
+        tetra.echoMeas=true;
+    end
+
+    % probe_offset not in kinetic parameters.
+    % copy it there for error computatuion
+    pp.k.probe_offset = pp.probe_offset;
+
     gp = fSetParams(p,igp);  % copy parameter vector to standard param struct
     [err,errZ,badZ] = tetraProbeErr(pp.k, pp.pos, gp.k);
+    %fprintf(2,'probe_err=%.4g',err);
     if isfield(pp,'measXY')
+        if (tetra.callCount <= 1)
+            disp('Using calibration print measurements.');
+            if tetra.echoMeas
+                for m = 1:length(pp.measXY.id)
+                    fprintf(1,'   %s = %6.2f\n', pp.measXY.id(m,:), pp.measXY.dist(m));
+                end
+                tetra.echoMeas = false;
+            end
+        end
         [mse,errXY,badXY] = tetraPrintErr(pp.k, pp.measXY, gp.k);
-        err = err * mse;
+        %fprintf(2,'   meas_err=%4g',mse);
+        err = err * mse * mse;  % extra weight on print
     else
         errXY=1;
         badXY=0;
     end
-    %fprintf(2,'\n');
-    global callCount;
-    callCount = callCount+1;
-    fprintf(1,'%4d %.6g  ',callCount, err);
-    fprintf(1,' %.5g',p);
-    fprintf(1,'\n');
+    if (mod(tetra.callCount,50) == 0)
+        %fprintf(2,'\n');
+        fprintf(1,'%4d %.6g  ',tetra.callCount, err);
+        fprintf(1,' %.5g',p);
+        fprintf(1,'\n');
+    end
 end
 
 % pos is commanded tower location at probe trigger
@@ -38,13 +60,14 @@ function [err, errZ, bad] = tetraProbeErr(pk, pos, gk)
 
     m = 1;
     errZ = zeros(n,1);
+    z0 = pk.probe_offset(3);  % probe trigger at z_offset, NOT 0
     bad = int32(errZ);
     for j=1:n
         dz = tetra2cart(gk, tet(j,:));  % guess at actual effector position
         if !isreal(dz)
             bad(j) = 1;
         end
-        errZ(j) = real(dz(3));
+        errZ(j) = real(dz(3)) - z0;
     end
     nBad = sum(bad);
 

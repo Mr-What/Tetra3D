@@ -3,19 +3,15 @@
 % is highly correlated to endstop (radius changes with tilt angle along tower).
 % Hence, it is usually wise to optimize radius and endstops together. (ab)
 function [gp,tp] = calR3E(logFile, gpp=[], measFile=[], measFileIdeal=[])
-    if ischar(logFile)
-        tp = loadCalData(logFile, measFile, measFileIdeal);
-    else
-        tp = logFile;  % it was already loaded
-    end
+    tp = loadCalData(logFile, measFile, measFileIdeal);
     
-    gp = tetraRefineR3E(tp,gpp)
+    gp = tetraRefineR3E(tp,gpp);
     
     % had small error when using measXY, when bed-only converted.
     % check by simulated annealing?
     gp = tetraRefineR3E(tp,gp.p,...
                         [1,1,1,1,1,1]*.4,
-                        [1,1,1,1,1,1]*.001)
+                        [1,1,1,1,1,1]*.001);
 
     % write out updates for klipper printer.cfg
     % make a config parameter structure containing only stuff to be updated:

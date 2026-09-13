@@ -17,16 +17,16 @@
 %             used in this optimization may not be the same as ones
 %             used for the original probe(s).
 %-
-function tp = tetraRefineRE(PP,IGP, ...
+function tp = tetraRefineRE(PP,IGP=[], ...
                             initialStep = [1,1,1,1], ...
                             smallBox = [.004,.004,.004,.004])
-    global callCount;
-    callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
+    global tetra
+    tetra.callCount = 0; % tetraFitErr() will count number of calls in SimplexMinimize
 
     % ----- initial data plot
     figure(2); [c,ax,pFit] = plotInitialProbe(PP.probe);
 
-    if nargin < 2
+    if isempty(IGP)
         gp = getTetraParams(PP.p);
     else
         gp = getTetraParams(IGP);
@@ -37,7 +37,7 @@ function tp = tetraRefineRE(PP,IGP, ...
     maxIterations=444;
     [fit,nEval,status,err] = SimplexMinimize(...
         @(p) tetraFitErr(p,PP,gp,@setTetraRadiusEndstop),...
-   	initialGuess, initialStep, smallBox, maxIterations)
+   	initialGuess, initialStep, smallBox, maxIterations);
 
     % return refined tetra (tilted) parameter set
     tp = setTetraRadiusEndstop(fit,gp);

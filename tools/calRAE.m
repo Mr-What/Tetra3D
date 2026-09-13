@@ -1,9 +1,14 @@
-%  optimize delta_radius(3), arm-length, and endstops given ben probe data
-% AND xy-measurements.
+%  optimize delta_radius(3), arm-length, and endstops given bed probe data
+%     AND xy-measurements.
 %  You may get scale problems refining R and A at the same time
 %  without XY measurements
 function gp = calRAE(logFile, gpp=[], measFile, measFileIdeal=[])
-    tp = loadCalData(logFile, measFile, measFileIdeal);
+    if ischar(logFile)
+        tp = loadCalData(logFile, measFile, measFileIdeal);
+    else
+        tp = logFile;  % it was already loaded
+    end
+    m0 = idealTetraMeasFile(measFileIdeal);
 
     gp = tetraRefineRAE(tp,gpp)
     

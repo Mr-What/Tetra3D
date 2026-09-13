@@ -17,6 +17,7 @@
 % and associated tower stepper positions
 function tp = appendTowerPositions(PP,probe, measXYdat, measCmd)
     tp = getTetraParams(PP);  % re-construct kinematic parameters
+
     m = size(probe,1);
     pos = zeros(m,3);
     n=1;

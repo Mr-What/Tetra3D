@@ -2,26 +2,6 @@
 %
 %
 function q=tetra2cart(tp,tet)
-
-  if(0)
-    % for now, just brute-force search.  forward kinematics are hard to solve
-    seed = [0,0,10];
-    step = [1,1,1];
-    small = [1,1,1] * 1e-3;  % units are cm.  this is 10um
-
-  % servo-position parameters
-  %sp.a = tp.A0 + tet(1)*tp.Ahat;
-  %sp.b = tp.B0 + tet(2)*tp.Bhat;
-  %sp.c = tp.C0 + tet(3)*tp.Chat;
-  %sp.rodLen = tp.rodLen;
-  % add target servo position to compute error
-    tp1 = tp;
-    tp1.posServo=tet;
-    [q,nEval,status,err]=SimplexMinimize(@(v) tetra2cartErr(v,tp1),seed,step,small,1999,1e-8)
-    return
-  end
-
-
     % treat plane formed by the three servo positions as a new coordinate system.   % where all servo positions are in the z==0 plane, and A0 abd B0 lie on the y==0 line.
     % C0 is at x0
     %A0 = tp.A0 + tet(1)*tp.Ahat;
@@ -71,7 +51,13 @@ function apex=getTetraCoords0(baseLen,twrLen)
   yC = sqrt(yC2);
   x1 = (rA2-rB2)/(2*cc) + xB - (cc/2);
   y1 = (rB2-rC2+yC2+xB*(2*x1-xB))/(2*yC);
-  z1 = sqrt(rC2 - x1*x1 - ((y1-yC)^2));
+  z1 = rC2 - x1*x1 - ((y1-yC)^2);
+  if z1 < 0
+      disp('non-physical apex');
+      z1
+      keyboard
+  end
+  z1 = sqrt(z1);
   apex = [x1,y1,z1];
   %  return
   
@@ -84,8 +70,9 @@ function apex=getTetraCoords0(baseLen,twrLen)
          norm(apex-B0)-twrLen(2),...
          norm(apex-C0)-twrLen(3)];
   if sum(abs(err)) > 1e-11
-      keyboard
+      disp('failed err check, should be all zeros');
       disp(err);
+      keyboard
   end
 
 end

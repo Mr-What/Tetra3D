@@ -1,19 +1,13 @@
 %  optimize delta_radius and endstops given ben probe data
-function gp = calRE(logFile, gp0)
-    tp = loadProbeDataFromKlipperLog(logFile);
+function gp = calRE(logFile, gp0=[], measFile=[], measFileIdeal=[])
+    %tp = loadProbeDataFromKlipperLog(logFile);
+    tp = loadCalData(logFile, measFile, measFileIdeal);
 
-    % add XY data if you got it
-    %tp = appendTowerPositions(tp.p, probe, xyMeas, xyIdeal);
-    
-    if nargin > 1
-        gp = tetraRefineRE(tp,gp0)
-    else
-        gp = tetraRefineRE(tp)
-    end
+    gp = tetraRefineRE(tp,gp0);
     
     % had small error when using measXY, when bed-only converted.
     % check by simulated annealing?
-    gp = tetraRefineRE(tp,gp.p,[1,1,1,1],[1,1,1,1]*.004)
+    gp = tetraRefineRE(tp,gp.p,[1,1,1,1],[1,1,1,1]*.004);
 
     % write out updates for klipper printer.cfg
     % make a config parameter structure containing only stuff to be updated:

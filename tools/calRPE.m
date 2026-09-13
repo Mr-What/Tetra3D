@@ -3,17 +3,14 @@
 %           R - delta_radius
 %           P - delta_angle
 %           E - endstops
-function gp = calRPE(logFile, gpp)
-    tp = loadProbeDataFromKlipperLog(logFile)
-
-    % if you have XY data, add it to tp:
-    %tp = appendTowerPositions(tp.p, probe, xyMeas, xyIdeal);
-    
-    if nargin > 1
-        gp = tetraRefineRPE(tp,gpp)
+function gp = calRPE(logFile, gpp=[], measFile=[], measFileIdeal=[])
+    if ischar(logFile)
+        tp = loadCalData(logFile, measFile, measFileIdeal);
     else
-        gp = tetraRefineRPE(tp)
+        tp = logFile;  % it was already loaded
     end
+
+    gp = tetraRefineRPE(tp,gpp)
     
     % had small error when using measXY, when bed-only converted.
     % check by simulated annealing?
@@ -26,6 +23,6 @@ function gp = calRPE(logFile, gpp)
     up.position_endstops = gp.p.position_endstops;
     up.delta_radius = gp.p.delta_radius;
     up.delta_angles = gp.p.delta_angles;
-    write_tilted_delta_update_cfg(up,'radiusTowerPositionEndstopUpdate.cfg');
-    system('cat radiusTowerPositionEndstopUpdate.cfg');
+    write_tilted_delta_update_cfg(up,'updateRPE.cfg');
+    system('cat updateRPE.cfg');
 end
