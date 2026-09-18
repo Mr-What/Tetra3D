@@ -39,22 +39,12 @@ function tp = tetraRefineRPE(PP,IGP=[], ...
     maxIterations=666;
     [fit,nEval,status,err] = SimplexMinimize(...
         @(p) tetraFitErr(p,PP,gp,@setTetraRPE),...
-   	initialGuess, initialStep, smallBox, maxIterations)
+   	initialGuess, initialStep, smallBox, maxIterations);
 
-    % check (simulaed annealing)
-    fit1=fit;err1=err;
-    callCount=0;
-    ig = fit + (rand(1,9)-.5) * .1;
-    [fit,nEval,status,err] = SimplexMinimize(...
-        @(p) tetraFitErr(p,PP,gp,@setTetraRPE),...
-   	ig, initialStep, smallBox, maxIterations)
-
-    disp([fit1;fit]);
-    disp([err1,err]);
-    
     % return refined tetra (tilted) parameter set
     tp = setTetraRPE(fit,gp);
-
+    tp.err=err;
+    
     % plot parameter fit, retrieve full parameter vector(s)
     [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,PP,gp,@setTetraRPE);
     pf = PP.probe;  pf(:,3) = pf(:,3) + errZ;

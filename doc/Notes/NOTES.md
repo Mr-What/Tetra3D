@@ -1,4 +1,6 @@
 # Tilted Delta Development Notes
+[Calibration Log](https://docs.google.com/spreadsheets/d/1F8SSiFC5vxzJGwmjgO5lJFe-6YIsopfEGAam5U8VZzw/edit?usp=sharing "Calibration Log")
+
 ## Added tilted_delta kinematics to klipper
 Initial build had a switch mounted on effector, which could
 be considered to be a zero offset bed probe.
@@ -302,3 +304,92 @@ offset check = trigger - nozzle touch = 2.51
 aargh.
 
 Running probe 68.  offset = 2.35.
+
+### 260915
+
+Missed some logs earlier.
+Got everything running.
+Smooth rough-cal, then print, then full-cal.
+worked fine.
+
+Had some trouble with nozzle crashing into bed.
+This did not happen when typing gcode in the console.
+Added some G4 P500 pauses in the PRINT_START macro, and
+it seemed to go away.
+
+Pretty decent test prints.
+Still a bit worried about machine part accuracy,
+but may be as good as we can expect from this printer.
+Try some pre-load rubber bands to reduce backlash?
+I see some backlash on PROBE_ACCURACY.
+The first few probes drift a bit, then go more random.
+Indicates parts are flexing and settling for a bit
+before it gets repeatable.
+
+### 260916
+
+Noticed loose screw on frame bracket.
+This may have been the cause of changing results for a long time.
+Tightened up, and re-calibrating like new, unknown printer at probe78.
+Printed cal print and probe080.
+
+### 0917
+
+## Recommended calibration procedure
+
+  1. check and update probe offset
+  2. ```FIRMWARE_RESTART```, then run bed probe, ```radialBedProbe.gcode```
+  3. copy results to ```octave``` machine,
+  ```
+       > tp = getCalData();
+  ```
+  4. calibrate ```delta_radius``` with the same value for each tower, and endstops.
+  ```
+       > gp = calRE(tp);
+  ```
+  5. update ```printer.cfg``` on RPi host:
+  ```
+       update_klipper_cfg.py printer.cfg updateRE.cfg
+  ```
+  6. This is all the calibration that was typically done by hand on old delta printers.
+  Check your bed levels with another bed probe, or compute the bed mesh with:
+  ```
+       HOME
+       BED_MESH_CALIBRATE PROFILE=RE
+       SAVE_CONFIG
+  ```
+  7. I prefer to do the calibration prints without the bed compensation, which will have a residual error in the calibration computations.
+     If you need the compensation to print, you can try
+  ```
+     > gp = calAE(tp,gp.p);
+     > gp = calR3E(tp,gp.p);
+  ```
+   Update those parameters, using the endstop positions from the last calibration computation.
+
+  8. print the calibration print, ```deltaCalPrint60.gcode```, which is sliced from ```Drawings/deltaCalPrint.scad```.
+  9. Measure the calibration print.  Alter the 
+     ```Tetra3D/tools/test/deltaMeasTemplate10_60.m``` file.
+     The first two letters should match the measured hexes.
+     The ```i``` suffix is for the distance between interior edges of the hex pair.
+     The ```o``` suffix is for the outside edge distance.
+     
+  10. Run another bed probe, using the same configuration that was used for the cal print.
+  11. Load that data with the measured data:
+  ```
+      > tp = getCalData(1,'myMeasurements.m');
+  ```
+
+  12. Run the full calibration:
+  ```
+       > gp = calRPAZTE(tp);
+  ```
+  
+  13. Update ``printer.cfg``` with these results.
+      Delete any previous bed meshes in printer.cfg.
+      They are no longer valid after calibration parameters have changed.
+      
+  14. Check with another bed mesh, or probe script.
+      I usually find that if the probed level is mostly within [-0.1,0.1] that is good enough to print, and don't worry about a bed mesh correction.
+
+After re-calibration, bed mesh is:
+![bed mesh 82](./probe82.png)

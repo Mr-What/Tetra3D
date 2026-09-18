@@ -16,19 +16,56 @@ module showHotEnd() translate([0,0,10]) rotate(180) children();
 //kinematicProbe();  // kinematic mount contacts wired as probe
 
 //kinematicSwitchMount(); // mount for common microswitch as probe
-
 //kinMicroprobeV2mount();
+//kinMMZmount();  // Mellow Multihead Zero as probe
+kinD2HWmount();  // For Omron D2HW plunger microswitch
 
-kinMMZmount();
+D2HWyOff=4.2;
+module kinD2HWmount(slop=.2) difference() { d2hwFrame();
+
+    #kinMountBalls(nf=RES);
+
+    translate([0,D2HWyOff,-4.1]) cube([5.2+slop, 13.4+slop, 7.9],center=true);
+    hull() {
+        translate([0,D2HWyOff,0.25]) cube([4,12.8,1],center=true);
+        translate([0,0,21]) cylinder(r=7,h=1,$fn=RES*1.5);
+    }
+    
+    translate([0,0,30.9]) cube([60,60,20],center=true); // flat top
+    
+    // JST-XH 2.4 plug has 4x1 key that needs to fit through
+    // for a pre-wired endstop
+    // cut out a notch
+    translate([-2.5,3,1.5]) cube([1,4,6+4],center=true);
+    
+    //translate([0,-30*0,-12]) cube(100);
+    //translate([-102,-30,-2]) cube(100);
+    //%difference() {cylinder(r=26,h=1,$fn=90); cylinder(r=1,h=5,center=true,$fn=24);}
+   %translate([0,0,-11]) rotate(90) import("D2HW.stl");
+}
+module d2hwFrame() union() { kinematicProbeFrame();
+    hull() {
+        translate([0,D2HWyOff,-3])
+            pairX(3) pairY(7) sphere(2,$fn=RES/2);
+        
+        translate([0,0,14]) for(a=[0:120:355]) rotate(a)
+            translate([0,13,0]) cylinder(r1=.1,r2=3,h=1,$fn=RES/2);
+    }
+}
+
 
 use <mellowMultiheadZero.scad>;
-module kinMMZmount() difference() { mmzFrame();
+module kinMMZmount(slop=.2) difference() { mmzFrame();
 
     #kinMountBalls(nf=RES);
 
     // clear area around tool base
-    cylinder(d=11+0.2,h=40,$fn=RES);
-    translate([0,0,22]) cube([20+.2,17.3+.2,22],center=true);        
+    cylinder(d=11+2*slop,h=40,$fn=RES);
+    translate([0,0,22]) hull() {
+        cube([20+2*slop,17.3+2*slop,22+1.95+1.95],center=true);
+        // add a little dome to indent to print better
+        translate([0,0,-22/2-.7-1.5]) cylinder(d=11.5,h=1,$fn=RES);
+    }        
 
     // screw holes for mount     
     pairX(16/2) pairY(10.5/2) cylinder(d=3.1,h=5+10,$fn=16);
@@ -36,18 +73,21 @@ module kinMMZmount() difference() { mmzFrame();
     cylinder(d=5,h=50,$fn=RES);  // M5 hole in center, no good reason
     
     translate([0,0,30.9]) cube([60,60,20],center=true); // flat top
-    cylinder(r=24,h=8,$fn=6); // flat bottom
+    cylinder(r=24,h=4,$fn=6); // flat bottom
     
-    %translate([0,0,-11]) import("mellowMultiheadZero.stl");
+    // probe test 260906 had z-offset at 1.95.
+    // -12.95 expected to have trigger very close to where nozzle
+    // contacts bed.
+    %translate([0,0,-11-1.95]) import("mellowMultiheadZero.stl");
 }
 
 // add extra bracing to make up for Mellow Multihead Zero tool
 module mmzFrame() union() { kinematicProbeFrame();
     hull() {
-        translate([0,0,8]) {
+        translate([0,0,4]) {
             // brace around mount holes
-            pairY(10.5/2) pairX(16/2) cylinder(r1=6, r2=7, h=9, $fn=RES);
-            translate([0,11])         cylinder(r1=5, r2=1, h=1, $fn=RES);
+            #pairY(10.5/2) pairX(16/2) cylinder(d1=8, d2=3, h=9, $fn=RES);
+            //translate([0,12,4])         cylinder(d1=6, d2=1, h=1, $fn=RES);
         }
         translate([0,0,21]) {
             translate([0,-9]) pairX(17) cylinder(r1=5, r2=3, h=1, $fn=RES);
@@ -74,7 +114,7 @@ module kinMicroprobeV2mount() difference() { microprobeFrame();
     // Make mount holes slightly less than M3. 
     //   can try to force thread into plastic, or drill out to use nuts
     //  kit comes with 02.3 bolts.  perhaps M2.5?  drill small to thread:
-    translate([0,-2.75,0]) pairX(17/2-.04) cylinder(d=2.2,h=40,$fn=RES/2);
+    translate([0,-2.75,0]) pairX(17/2-.04) cylinder(d=2.3,h=40,$fn=RES/2);
         
     cylinder(d=5,h=50,$fn=RES);  // M5 hole in center, no good reason
     

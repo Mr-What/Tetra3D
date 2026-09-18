@@ -72,9 +72,10 @@ G2 X0 Y80 I80 J0 E11
 ;G3 X-100 Y0 I0 J-100 E9 ; end of Q II
 ;G1 X-80 E2
 
-G0 Z3 E-3 F8000  ; extra purge here, tended to leave a line
+G0 Z5 E-3 F8000  ; extra purge here, tended to leave a line
+G4 P500
 G0 X-80 Y0 E-5
-G0 Z0.25 E9
+G0 Z0.25 E10
 G3 X0 Y-80 I80 J0 E12
 G1 Y-60 E2
 G2 X-60 Y0 I0 J60 E10
@@ -88,7 +89,4 @@ G1 Y-10 E1
 G2 X-10 Y0 I0 J10 E2 
 G1 X0 E1
 G0 Z2 F3000 E-3
-
 PRINT_DONE
-
-

@@ -14,10 +14,6 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
     global tetra;
     tetra.callCount = tetra.callCount+1;
 
-    if !isfield(tetra,'echoMeas')
-        tetra.echoMeas=true;
-    end
-
     % probe_offset not in kinetic parameters.
     % copy it there for error computatuion
     pp.k.probe_offset = pp.probe_offset;
@@ -42,7 +38,7 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
         errXY=1;
         badXY=0;
     end
-    if (mod(tetra.callCount,50) == 0)
+    if (mod(tetra.callCount,tetra.callPeriod) == 0)
         %fprintf(2,'\n');
         fprintf(1,'%4d %.6g  ',tetra.callCount, err);
         fprintf(1,' %.5g',p);

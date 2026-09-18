@@ -14,7 +14,7 @@ function tp = getCalData(n=0, measFile=[], measFileIdeal=[])
     end
     probeSamplesFile = sprintf('probeSamples%03d.csv',n)
     if exist(probeSamplesFile, 'file') != 2
-        cmd=sprintf('../extractProbeSamples.pl < %s > %s',logFile,probeSamplesFile)
+        cmd=sprintf('./extractProbeSamples.pl < %s > %s',logFile,probeSamplesFile)
         system(cmd)
     end
     tp.probeSamples = load(probeSamplesFile);
@@ -23,7 +23,18 @@ function tp = getCalData(n=0, measFile=[], measFileIdeal=[])
     tp.bedMedian = median(z);
     tp.bedMean   = mean(z);
     tp.bedStDev  = std(z);
+    fprintf(1,'probe_offset=[%g,%g,%.3f]\n', tp.probe_offset);
     fprintf(1,'z stats: [median, mean, SD] = [ %.3f , %.3f , %.4f ]\n',...
             tp.bedMedian, tp.bedMean, tp.bedStDev);
+
+    figure 1; hold off;
+    p=tp.probe;ps=tp.probeSamples;z0=tp.probe_offset(3);
+    plot3(p(:,1),p(:,2),p(:,3)-z0,'o-');
+    xlabel X;ylabel Y;grid on; hold on;
+    plot3(ps(:,1),ps(:,2),ps(:,3),'rd-');
+    legend('estimate','samples');
+    zlabel(sprintf('offset=%.3f',z0));
+    title(sprintf('probe%03d',n));
+    hold off;
 end
     

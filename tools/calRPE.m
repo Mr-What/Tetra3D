@@ -4,13 +4,8 @@
 %           P - delta_angle
 %           E - endstops
 function gp = calRPE(logFile, gpp=[], measFile=[], measFileIdeal=[])
-    if ischar(logFile)
-        tp = loadCalData(logFile, measFile, measFileIdeal);
-    else
-        tp = logFile;  % it was already loaded
-    end
-
-    gp = tetraRefineRPE(tp,gpp)
+    tp = loadCalData(logFile, measFile, measFileIdeal);
+    gp = tetraRefineRPE(tp,gpp);
     
     % had small error when using measXY, when bed-only converted.
     % check by simulated annealing?
@@ -24,5 +19,6 @@ function gp = calRPE(logFile, gpp=[], measFile=[], measFileIdeal=[])
     up.delta_radius = gp.p.delta_radius;
     up.delta_angles = gp.p.delta_angles;
     write_tilted_delta_update_cfg(up,'updateRPE.cfg');
+    system(sprintf('echo "# err=%.6f" >> updateRPE.cfg',gp.err));
     system('cat updateRPE.cfg');
 end

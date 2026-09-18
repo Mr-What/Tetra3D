@@ -1,3 +1,5 @@
+RES=72;
+
 module pairX(d) for(a=[-d,d]) translate([a,0,0]) children();
 module pairY(d) for(a=[-d,d]) translate([0,a,0]) children();
 module pairZ(d) for(a=[-d,d]) translate([0,0,a]) children();
@@ -85,6 +87,30 @@ module fan40mount(h=20) { %translate([0,0,-10]) fan40();
     } 
            
 }
+
+
+module socketHeadHole(d,len,headD,headH,headLen,headDtop,slop=.2) {
+    translate([0,0,-len]) cylinder(d=d+slop,h=len+.05,$fn=24);
+    hull() {
+        #cylinder(d1=headD-slop/2,d2=headD+slop,h=headH,$fn=RES);
+        translate([0,0,headLen-1])
+            cylinder(d2=headDtop+slop,d1=1,h=1,$fn=RES);
+    }
+}
+module M5socketHeadHole(len=30, headD=8.4, headH=5,
+    headLen=20, headDtop=8.8, slop=.2 )
+        socketHeadHole(4.8,len,headD,headH,headLen,headDtop,slop);
+module M3socketHeadHole(len=30, headD=5.3, headH=3,
+    headLen=20, headDtop=5.8, slop=.2 )
+        socketHeadHole(2.9,len,headD,headH,headLen,headDtop,slop);
+
+//module pairX(d) for(a=[-d,d]) translate([a,0,0]) children();
+//module pairY(d) for(a=[-d,d]) translate([0,a,0]) children();
+//module pairZ(d) for(a=[-d,d]) translate([0,0,a]) children();
+module pairDiag(d) for(a=[-1,1]) translate([-a*d,a*d,0]) children();
+//module mirrorZ(d) {  translate([0,0,d]) children();
+//    mirror([0,0,1])  translate([0,0,d]) children(); }
+
 
 /* $Id$
 $Log$
