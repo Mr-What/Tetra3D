@@ -1,4 +1,4 @@
-# Tilted Delta Development Notes
+eog# Tilted Delta Development Notes
 [Calibration Log](https://docs.google.com/spreadsheets/d/1F8SSiFC5vxzJGwmjgO5lJFe-6YIsopfEGAam5U8VZzw/edit?usp=sharing "Calibration Log")
 
 ## Added tilted_delta kinematics to klipper
@@ -222,6 +222,9 @@ Re-installing old arms, will need to re-calibrate.
 
 Printed new mounts for tghe BiQU microprobe, and the Mellow Multihead Zero device.
 
+![New probe toolheads](./probeTools.jpg)
+
+
 ### 260907
 
 Got a very good probe from the Mellow Multihead Zero probe.
@@ -393,3 +396,20 @@ Printed cal print and probe080.
 
 After re-calibration, bed mesh is:
 ![bed mesh 82](./probe82.png)
+
+
+### 260919
+
+Crashed into endstops, reason unknown.
+One was knocked loose.
+Installed new idler tension mount on one tower.
+Tightened up all endstops.
+re-calibration of endstops looks good.
+![probe84](./probe84.png)
+![Bed mesh p83](./mesh83.png)
+
+Seeing significant backlash.
+Line segments are drawn on the X and Y axes, 
+but with approach to each segment from opposite direction.
+
+![backlash on target test](./targetBacklash.jpg)

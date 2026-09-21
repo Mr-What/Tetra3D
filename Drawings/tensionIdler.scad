@@ -10,7 +10,7 @@ CenterHeight = BeltClearance + BeltWidth/2;
 CR=2;  // corner radius
 
 $t=0;  // 0..1 for animation
-translate([50-12.5*$t,0,0]) {
+translate([45-10*$t,0,0]) {
 %armProxy();
 translate([0,0,23]) { %mirror([0,0,1]) idlerClamp();
 
@@ -19,46 +19,56 @@ screwBase();
 
 use <util.scad>;
 
+thickM5 = 4.5;  // for M5-10-12mm socket head
+//thickM5 = 2.5;  // for M5-8mm socket head
+
 module screwBase() difference () { screwBaseBody();
-    translate([2,0,4.5]) pairX(12) M5socketHeadHole();
+    translate([2,0,thickM5]) pairX(12) M5socketHeadHole();
     translate([-3,0,CenterHeight])  // M3 hole
         rotate([0,-90,0]) M3socketHeadHole();
-    translate([17,0,CenterHeight+3]) pairZ(3) idlerBrace(CR+.2);
+    translate([17,0,CenterHeight]) idlerBrace(CR+.1);
     
     //translate([10,0,10+23]) cube(20,center=true);
 }
 
 module idlerClamp() difference() { idlerClampBody();
     cylinder(d=5+.1,h=55,center=true,$fn=RES);
-    translate([-25,0,0]) rotate([0,90,0]) {
+    translate([-21,0,0]) rotate([0,90,0]) {
         cylinder(d=3,h=40,center=true,$fn=24);
-        // nylog diameter 6.0mm, total height 4
-        rotate(30) cylinder(d1=6.1,d2=6.4,h=5,$fn=6);
+        // nyloc diameter 6.0mm, total height 4
+        rotate(30)
+            //cylinder(d1=6.1,d2=6.4,h=5,$fn=6);  // captured
+            cylinder(d1=6.1,d2=6.4,h=15.1,$fn=6);  // open
     }
-    translate([-20-9,-4,0]) rotate([180,0,0]) key();  // key
+    translate([-20-8+3,-4  ,0]) rotate([180,0,0]) key(0);
+    translate([-20+4+3, 4.8,0]) rotate([180,0,0]) key(-.1,1,2);
     //translate([-40,0,-20]) cube(50);
 }
 
 module idlerClampBody() union() { //%idlerClampBodyFull();
     translate([0,0,-9]) idlerSide();
-    translate([-20,0,0]) idlerBrace();
+    translate([-17,0,0]) idlerBrace();
 }
 //module idlerClampBodyFull() union() {
 //    mirrorZ(-8.5) idlerSideFull();
 //    translate([-20,0,0]) idlerBrace();
 //}
 module idlerBrace(r=CR) union() {
-    hull() translate([-2,0,0]) pairX(10) pairY(4.5) {
+    dTop = (r>CR) ? 8 : 0;  // make taller for cut-out
+    hull() translate([-3,0,0]) pairX(8) pairY(4.5) {
         translate([0,0,-10.5]) corner(r);
-        translate([0,0,-1  ]) cylinder(r=r,h=.95,$fn=RES/2);
+        translate([0,0,dTop-1  ]) cylinder(r=r,h=1,$fn=RES/2);
     }
-    translate([-9,4,0]) key(-.1);
+    if(r==CR) { // actual fork, not cut-out
+        translate([-8, 4  ,0]) key(-.1);
+        translate([ 4,-4.8,0]) key(0,1,2);
+    }
 }
-module key(slop=.1) translate([0,0,-.05]) hull() pairX(2)
-    cylinder(d1=2.8+slop,d2=.4+slop,h=2+slop,$fn=RES/2);
+module key(slop=.1,len=1.5,d=2.8) translate([0,0,-.05]) hull() pairX(len)
+    cylinder(d1=d+slop,d2=1+slop,h=1+slop,$fn=RES/2);
 
 module idlerSide() {
-    translate([0,0,2.5]) cylinder(d1=9,d2=7,h=2,$fn=RES);
+    translate([0,0,2.5]) cylinder(d1=11,d2=7,h=2,$fn=RES);
     hull() { baseTorus();
         translate([-12,0,0]) pairY(4.5) pairZ(1.5)
         rotate([0,90,0]) cylinder(r=CR,h=1,$fn=RES);

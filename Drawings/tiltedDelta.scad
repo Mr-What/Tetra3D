@@ -21,6 +21,9 @@ use <endstop20v.scad>;
 
 baseRailHeight = 60;
 
+%translate([0,0,67+2.5]) circle(180);  // buildplate proxy
+%translate([0,45,115]) rotate([15,0,0]) cube([2,290,2],center=true); // arm proxy
+
 //translate([0,-0.5*baseExtLen]) //{// center lower vertex
 //translate([0,0,-960]) // center apex
 difference() {

@@ -37,7 +37,9 @@ function tp = tetraRefineE(PP,IGP=[], ...
 
     % return refined tetra (tilted) parameter set
     tp = setTetraE(fit,gp);
-
+    tp.err = err;
+    tp.nEval=nEval;
+    
     % plot parameter fit, retrieve full parameter vector(s)
     [err,errZ] = plotTetraFit(fit,PP,gp,@setTetraE);
 
