@@ -9,11 +9,10 @@
 %           Z - zenith tilt (tilt_radial)
 %           T - tangential_tilt
 %           E - endstops
-%  meas  -- cal print measurements
-%  meas0 -- ideal measurements, variable definitions in MATLAB code format.
-function [gp,tp,gpv] = calRPAZTE(logFile, gpp=[], meas=[], meas0=[])
-    tp = loadCalData(logFile, meas, meas0);
-
+%
+%  tc  -- tetra calibration data, like from tetraLoadCalData(33,measFile='calMeas033.m')
+%  gp0 -- initial guess at tetra parameters, tc.p is default
+function gp = tetraCalRPAZTE(tc, gpp=[])
     gp = tetraRefineRPAZTE(tp,gpp);
 
     % do some simulated annealing
@@ -39,7 +38,6 @@ function [gp,tp,gpv] = calRPAZTE(logFile, gpp=[], meas=[], meas0=[])
     
     % write out updates for klipper printer.cfg
     % make a config parameter structure containing only stuff to be updated:
-    iMin
     gp = gpv(iMin);
     up.position_endstops = gp.position_endstops;
     up.delta_radius      = gp.delta_radius;
@@ -47,12 +45,15 @@ function [gp,tp,gpv] = calRPAZTE(logFile, gpp=[], meas=[], meas0=[])
     up.arm_lengths       = gp.arm_lengths;
     up.tilt_radial       = gp.tilt_radial;
     up.tilt_tangential   = gp.tilt_tangential;
-    write_tilted_delta_update_cfg(up,'update.cfg');
+    tetraWriteUpdateCfg(up,'update.cfg');
     rem=sprintf('err=%.6f;  bedMed=%.3f;  stDev=%.3f; z0=%.3f',...
                 gp.err, tp.bedMedian-tp.probe_offset(3), ...
                 tp.bedStDev, tp.probe_offset(3));
     system(['echo "# ',rem,'" >> update.cfg']); 
     system('cat update.cfg');
+    gp.gpv = gpv;  % pass back everything, just in case
+    gp.gpcMin=iMin;
+    gp.calData = tc;
 end
 
 % vector of random numbers, uniform from [-hi,hi]

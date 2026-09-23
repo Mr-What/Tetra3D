@@ -1,8 +1,8 @@
 %  optimize delta_radius and endstops given ben probe data
-function gp = calRE(logFile, gp0=[], measFile=[], measFileIdeal=[])
-    %tp = loadProbeDataFromKlipperLog(logFile);
+%     tc       -- tetra calibration data, from tetraLoadCalData(n,...)
+%     gp0      -- initial guess at tetra parameters, tc.p is default
+function gp = tetraCalRE(tc, gp0=[])
     tp = loadCalData(logFile, measFile, measFileIdeal);
-
     gp = tetraRefineRE(tp,gp0);
     
     % had small error when using measXY, when bed-only converted.
@@ -13,6 +13,6 @@ function gp = calRE(logFile, gp0=[], measFile=[], measFileIdeal=[])
     % make a config parameter structure containing only stuff to be updated:
     up.position_endstops = gp.p.position_endstops;
     up.delta_radius = gp.p.delta_radius;
-    write_tilted_delta_update_cfg(up,'updateRE.cfg');
+    tetraWriteUpdateCfg(up,'updateRE.cfg');
     system('cat updateRE.cfg');
 end

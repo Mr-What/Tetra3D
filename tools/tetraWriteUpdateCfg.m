@@ -1,7 +1,7 @@
 % given (part of) a klipper tilted_delta configuration parameter struct,
 % write a partial klipper printer.cfg type file, that contains all desired
 % updated entries
-function write_tilted_delta_update_cfg(update, fNam)
+function tetraWriteUpdateCfg(update, fNam)
     fid = fopen(fNam,'w');
     if (fid <= 2)
         error('Could not open file "%s".',fNam);

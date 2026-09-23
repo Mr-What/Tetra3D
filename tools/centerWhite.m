@@ -20,7 +20,7 @@ g(128:129)=greenPeak;
 r(128)=1;b(129)=1;
 r(129)=offWhite;
 b(128)=offWhite;
-colormap([r;g;b]');
+colormap([flip(r);flip(g);flip(b)]');
 
 % $Log$
 % Revision 1.1  2007-03-01 22:09:04  aaron

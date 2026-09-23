@@ -2,21 +2,17 @@
 %     AND xy-measurements.
 %  You may get scale problems refining R and A at the same time
 %  without XY measurements
-function gp = calRAE(logFile, gpp=[], measFile, measFileIdeal=[])
-    if ischar(logFile)
-        tp = loadCalData(logFile, measFile, measFileIdeal);
-    else
-        tp = logFile;  % it was already loaded
-    end
-    m0 = idealTetraMeasFile(measFileIdeal);
-
-    gp = tetraRefineRAE(tp,gpp)
+%     tc  -- tetra calibration data, from tetraLoadCalData(33,measFile='calMeas033.m')
+%     gp0 -- initial guess at tetra parameters, tc.p is default
+function gp = tetraCalRAE(logFile, gpp=[], measFile, measFileIdeal=[])
+    gp = tetraRefineRAE(tc,gpp);
     
     % write out updates for klipper printer.cfg
     % make a config parameter structure containing only stuff to be updated:
     up.position_endstops = gp.p.position_endstops;
     up.delta_radius = gp.p.delta_radius;
     up.arm_lengths = gp.p.arm_lengths;
-    write_tilted_delta_update_cfg(up,'updateRAE.cfg');
+    tetraWriteUpdateCfg(up,'updateRAE.cfg');
     system('cat updateRAE.cfg');
+    gp.calData=tc;  % copy over to make sure you know what data was used
 end

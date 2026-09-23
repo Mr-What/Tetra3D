@@ -3,10 +3,9 @@
 %           Z - zenith tilt (tilt_radial)
 %           T - tangential_tilt
 %           E - endstops
-%  meas  -- cal print measurements
-%  meas0 -- ideal measurements, variable definitions in MATLAB code format.
-function gp = calZTE(logFile, gpp=[], meas=[], meas0=[])
-    tp = loadCalData(logFile, meas, meas0);
+%  tc  -- tetra calibration data, like from tetraLoadCalData(33,...)
+%  gp0 -- initial guess at tetra parameters, tc.p is default
+function gp = tetraCalZTE(logFile, gpp=[])
     gp = tetraRefineZTE(tp,gpp);
 
     % write out updates for klipper printer.cfg
@@ -14,7 +13,8 @@ function gp = calZTE(logFile, gpp=[], meas=[], meas0=[])
     up.position_endstops = gp.p.position_endstops;
     up.tilt_radial       = gp.p.tilt_radial;
     up.tilt_tangential   = gp.p.tilt_tangential;
-    write_tilted_delta_update_cfg(up,'updateZTE.cfg');
+    tetraWriteUpdateCfg(up,'updateZTE.cfg');
     system(sprintf('echo "# err=%.6f" >> updateZTE.cfg',gp.err));
     system('cat updateZTE.cfg');
+    gp.calData=tc;
 end
