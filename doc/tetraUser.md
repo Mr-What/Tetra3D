@@ -43,6 +43,19 @@ guess radius
 
 measure and guess endstops
 
+load calibration data
+```
+   octave> tc = tetraLoadCalData(n);  % tetra calibration data
+```
+The calibration integer id, n, will default to zero if not
+provided.
+This sequence number is used for derived calibration data files.
+The path to and/or name if these klipper log files is set
+in ```tetra.logFileFmt```emacs 
+
+
+
+
 ### get parameters close enough to print
 
 Usually just ```tetraCalRE```

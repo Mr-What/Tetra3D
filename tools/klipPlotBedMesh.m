@@ -1,5 +1,5 @@
 % make a pretty contour plot from a klipper bed mesh in printer.cfg
-function mesh = klipperPlotBedMesh(printerCfgFile, meshName)
+function mesh = klipPlotBedMesh(printerCfgFile, meshName)
     mesh=loadBedMesh(printerCfgFile, meshName);
     mesh.fileName=printerCfgFile;
     mesh.name = meshName;
@@ -16,10 +16,12 @@ function mesh = klipperPlotBedMesh(printerCfgFile, meshName)
     hold off
     [c0,h0]=contourf(gx,gy,z,64,'LineColor','none');
     %imagesc(z)
-    axis image;
+    axis equal % image;
     zMax = max(abs(mesh.points(:)))*1000;
     caxis([-zMax,zMax]);
     levels = roundLevels(zMax);
+    set(gca,'xtick',mesh.xAxis,'ytick',mesh.yAxis);
+    grid on;
     hold on;
     [c,h] = contour(gx,gy,z,levels,'k');
     clabel(c,h,levels,'fontsize',12,'fontweight','bold');
