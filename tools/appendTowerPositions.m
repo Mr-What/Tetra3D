@@ -16,7 +16,7 @@
 % Return an appended full probe parameter strucure with readings
 % and associated tower stepper positions
 function tp = appendTowerPositions(PP,probe, measXYdat, measCmd)
-    tp = getTetraParams(PP);  % re-construct kinematic parameters
+    tp = tetraGetParams(PP);  % re-construct kinematic parameters
 
     m = size(probe,1);
     pos = zeros(m,3);

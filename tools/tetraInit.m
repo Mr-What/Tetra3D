@@ -1,9 +1,9 @@
 % initialize tetra tool path and default values for tetra global
 global tetra
 tetra.home = '~/Tetrahedral3Dprinter/Tetra3D';
-tetra.toolPath = [tetra.home, 'tools'];
+tetra.toolPath = [tetra.home, '/tools'];
 %addpath(tetra.toolPath);  % done in .octaverc to find this file!
-addpath([tetra.toolPath, 'test']); % test scripts
+addpath([tetra.toolPath, '/test']); % test scripts
 
 tetra.callCount=0;  % for SimplexMinimize diagnostic print
 tetra.callPeriod=50;  % print out SimplexMinimize diag every this many counts

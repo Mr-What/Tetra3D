@@ -30,12 +30,12 @@
 % longer variable names, similar to thise for linear_delta,
 % for definition in a [printer] section
 %
-function tp=getTetraParams(p0)
+function tp=tetraGetParams(p0)
     if isfield(p0,"delta_radius")  % each tower, at base
         tp.p = p0;  % parameters in "interface" form
         tp.k = tetraKineticParams(p0);
     elseif isfield(p0,"printer")  % this must be from loadKlipperCfg.m
-        tp = getTetraParams(cfg2tetraDef(p0));
+        tp = tetraGetParams(cfg2tetraDef(p0));
     else
         tp.k = p0;
         tp.p = tetraDefinitionParams(p0);

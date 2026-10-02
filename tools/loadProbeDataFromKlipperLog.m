@@ -6,7 +6,7 @@
 %  using this.
 function [tp,cfg] = loadProbeDataFromKlipperLog(logFile)
     cfg = loadKlipperCfg(logFile);  % either printer.cfg or klippy.log
-    p = getTetraParams(cfg);
+    p = tetraGetParams(cfg);
     cmd = sprintf('grep "Result: at .*estimate" "%s" | sed "s/^Result: at//" | sed "s/estimate contact at z=/,/" > /tmp/probe.csv',logFile);
     disp(cmd)
     system(cmd)
