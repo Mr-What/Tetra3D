@@ -413,3 +413,18 @@ Line segments are drawn on the X and Y axes,
 but with approach to each segment from opposite direction.
 
 ![backlash on target test](./targetBacklash.jpg)
+
+### 261002
+
+Working on calibration plate.
+Tried machining, but it's a lot of trouble.
+Trying to probe 3D printed plate, printed on a wall-calibrated
+Cartesian style printer.
+With the Mellow MultiHead Zero probe, I can see some
+sideways deflection on the probes.
+This will make it difficult to use these probes for a
+reliable bed probe estimate.
+I will fit probes with a 2D parabolic polynomial,
+in the hopes that any odd sensitivities from sideways force
+will make probes look like an odd-shaped poly,
+but with a reliable center.

@@ -1,23 +1,43 @@
 % estimate a local minima from samples of a 2D function
 %
-%   p0  -- array (n,3) of points
-%   x0, y0 -- look for minima near these points
-function [pMin,pClose] = estimateLocalMinima2D(p0,x0=0,y0=0)
+%   p0  -- array (n,3) of points, previously classified as members of a cluster
+% %%   x0, y0 -- look for minima near 
+function pMin = estimateLocalMinima2D(p0)
     global tetra
-    [zMin,iMin] = min(p0(:,3));
-    d = p0(:,1:2) - [x0,y0];
-    d = norm(d,2,'rows');
-    idxClose = find(d < 5);
-    p=p0(idxClose,:);
-    [coef, fit] = fitPoly2D(p);
-    if bitand(tetra.plotFlags,2), plot2DpolyFit(p0,p,coef); end
 
-    idxCloseFit = close2(p(:,3),fit);
-    pClose = p(idxCloseFit,:);
-    [coef, fit] = fitPoly2D(pClose);
-    pMin = poly2Dinflection(coef)
-    if bitand(tetra.plotFlags,2), plot2DpolyFit(p,pClose,coef); end
+    % moved to assert data is pre-clustered.  don't need this:
+    %[zMin,iMin] = min(p0(:,3));
+    %d = p0(:,1:2) - [x0,y0];
+    %d = norm(d,2,'rows');
+    %idxClose = find(d < 5);
+    %p=p0(idxClose,:);
+    %[coef, fit] = fitPoly2D(p);
+    %if bitand(tetra.plotFlags,2), plot2DpolyFit(p0,p,coef); end
+    %
+    %idxCloseFit = close2(p(:,3),fit);
+    %pClose = p(idxCloseFit,:);
+    [coef, fit] = fitPoly2D(p0);
+    pMin = poly2Dinflection(coef);
+    if bitand(tetra.plotFlags,4)
+        % plot2DpolyFit(p,pClose,coef); end
+        xx = linspace(floor(min(p0(:,1))),ceil(max(p0(:,1))),20);
+        yy = linspace(floor(min(p0(:,2))),ceil(max(p0(:,2))),20);
+        [xg,yg] = meshgrid(xx,yy);
+        zz = evalPoly2D(xg,yg,coef);
+        figure 1
+        hold off
+        plot3(p0(:,1),p0(:,2),p0(:,3),'mo');
+        grid on
+        hold on
+        mesh(xg,yg,zz);
+        tit = sprintf('%d probes, minima [%.3f, %.3f, %.3f]',length(fit),pMin);
+        title(tit);
+        hold off
+
+        disp('any key to continue...');kbhit();
+    end
 end
+
 
 function plot2DpolyFit(p,pClose,coef)
         xx = linspace(floor(min(pClose(:,1))),ceil(max(pClose(:,1))),20);
