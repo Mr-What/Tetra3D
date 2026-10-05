@@ -19,9 +19,9 @@ aMag = 45;
 *%translate([-1.75,-10,-12])
 switchMount();
 
-hotEndFrame();
+%hotEndFrame();
 //difference() {
-*%  effector();
+effector(0,0); //withAirDuct=1,withSwitchMount=1
 //}
 
 use <partFanMounts.scad>;
@@ -131,22 +131,25 @@ module hotEndFrame() difference() {
         cylinder(d=16.2,h=5,$fn=RES);
 }
 
-module effector() difference() { effectorBody();
+module effector(withAirDuct=1,withSwitchMount=1) difference() {
+    effectorBody(withAirDuct,withSwitchMount);
     
     // make sure bottom is flat
     //translate([0,0,-4-4]) cube([80,80,8],center=true);
     
     armBolts();
-    airDucts();  // for part cooling fan
+    if (withAirDuct) airDucts();  // for part cooling fan
     
-    translate([0,0,zMag]) onMag() #mag(d=dMag+.2);
-    
+    // t is magnet thickness
+    t = 2*tMag;  // double magnets if no air duct
+    #translate([0,0,zMag]) onMag() mag(d=dMag+.2,t=t);
+
     // cut down corners of part fan duct. 
     //   this is an area which may interfere with horns
     //translate([-19,-38.5,10]) cylinder(r=10,h=20,$fn=4);
 
     // these intersect frame, so must drill out after body
-    switchMountRxHoles(PosSwitchRx);
+    if (withSwitchMount) switchMountRxHoles(PosSwitchRx);
 }
 
 
@@ -154,7 +157,7 @@ module effector() difference() { effectorBody();
 
 use <switchMount.scad>;
 
-module effectorBody() union() {
+module effectorBody(withAirDuct=1, withSwitchMount=1) union() {
     translate([0,0,zMag]) onMag() magMount();
         
     onMount(rBase+10) mountHorns();
@@ -166,9 +169,9 @@ module effectorBody() union() {
     for(a=[90:120:355]) rotate(a) translate([rBase+2.5+5,0,-3.5])
         hornBrace(26);
 
-    switchMountRxBody(PosSwitchRx);
+    if (withSwitchMount) switchMountRxBody(PosSwitchRx);
     
-    translate([0,-rBase,8]) partFanDuct();
+    if (withAirDuct) translate([0,-rBase,8]) partFanDuct();
 }
 
 
@@ -264,8 +267,8 @@ module magMount() difference() {
         // expose top 1.5mm of magnet
         translate([0,0,-tMag-2.5]) cylinder(r1=dMag/2+2, r2=dMag/2+1,
             h=tMag+1, $fn=RES);
-        translate([0,3,-9]) rotate([aMag,0,0]) 
-            cube([dMag+4,sin(aMag)*dMag+4,.1],center=true);
+        translate([0,3-2,-9]) rotate([aMag,0,0]) 
+            cube([dMag+4,sin(aMag)*dMag+4+2,.1],center=true);
     }
     
     translate([0,10,-12]) rotate([45,0,0]) cube(20,center=true);

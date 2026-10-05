@@ -1,6 +1,6 @@
 % retrieve bed probe data and reduce
 % implement standard procedure to load cal data
-function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[])
+function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog=[])
     global tetra
     logFile = sprintf(tetra.logFileFmt,n)
     if exist(logFile, 'file') != 2
@@ -33,6 +33,13 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[])
     fprintf(1,'bed z stats: [median, mean, SD] = [ %.3f , %.3f , %.4f ]\n',...
             tp.bedMedian, tp.bedMean, tp.bedStDev);
 
+    if !isempty(plateProbeLog)
+        ppCSV = [plateProbeLog(1:end-4), 'plateProbe.csv'];
+        [ppp, ppCfg] = loadCalData(plateProbeLog);
+        scl = 119.3/200;  % 1==ideal (machined), change for different scale from actual plate to ideal drawing
+        tp.calPlate = tetraCalProbe(ppp.probe,scl);
+    end
+    
     if bitand(tetra.plotFlags,1)
         figure 1; hold off;
         p=tp.probe;ps=tp.probeSamples;z0=tp.probe_offset(3);
@@ -43,6 +50,18 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[])
         zlabel(sprintf('offset=%.3f',z0));
         title(sprintf('probe%03d',n));
         hold off;
+        if isfield(tp,'calPlate')
+            p = tp.calPlate.probe;  % raw probes of calibration plate
+            d = tp.calPlate.dimple; % estimated dimple bottoms
+            figure 2; hold off;
+            plot3(p(:,1),p(:,2),p(:,3),'o');
+            grid on;hold on;xlabel X;ylabel Y;
+            plot3(d(:,1),d(:,2),d(:,3),'rx');
+            legend('plate probes','dimple vertex');
+            title(['Cal Plate probes ',ppCSV]);
+            hold off
+            figure 1
+        end
     end
 end
     

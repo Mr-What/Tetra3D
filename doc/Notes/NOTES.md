@@ -428,3 +428,21 @@ I will fit probes with a 2D parabolic polynomial,
 in the hopes that any odd sensitivities from sideways force
 will make probes look like an odd-shaped poly,
 but with a reliable center.
+
+### 261004
+
+got plate probe runnuing.  checked in.
+Next: add plate measurements to tetraFitErr.
+![Probe and search for bottom of dimples](./probe095.png)
+![Estimated dimple minima](./probe095contour.png)
+### 261005
+
+More plate probes.
+From drawing, probe triggers on plate 4.17mm higher than bed.
+Probes are returning 5.2.  Not sure why such a large discrepency.
+Note that dimple has a very stair-step profile.
+Not many layers deep, but quite wide, simulating a 150 degree
+router groove tool.
+New, shallow dimple plate measured nominal 120mm on center dimples
+at 119.3mm.  Diagonal fairly close, hence square.
+I might add a scale option to ideal dimple locationsBoim1248
