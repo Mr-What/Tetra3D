@@ -1,17 +1,59 @@
 # Tetra3D
+#### [Development Notes](https://github.com/Mr-What/Tetra3D/blob/master/doc/Notes/NOTES.md "Tetra development notes")
+
 Tetrahedral 3D printer
 
 Ideal model has all base legs the same length, where the virtual "axis of action" of the three
-towers meet at a single apex point.  Ideal model would have only 3 parameters, base length, arm length, and apex height.
+towers meet at a single apex point.
+Ideal model would have only 3 parameters, base length, arm length, and apex height.
 
-The current model as implemented, can have a real dimensionality of 12.  Base lengths (3), tower angles (6), arm lengths(3).
-We coded tower angles as 3 R3 direction vectors, but one element is redundant so the actual dimensionality is 2 for each tower.
-For an actual 3D printer, we need 3 more parameters, the endstop offset on tower servos.
-Total parameter dimensionality is 15.
+### klipper changes
 
-If optimizing a 15 dimensional model for autocalibration from bed probes does not converge,
-we can start constraining some parameters, like assuming all arm lengths are equal, 
-or that all tower motion lines intersect at a single apex point.
+This model is maintained as branch [tilted-delta-kinematic-dev](https://github.com/Mr-What/klipper/tree/tilted-delta-kinematics-dev "fork of klipper") off of the master klipper project.
+See:
+   * https://github.com/Mr-What/klipper/blob/tilted-delta-kinematics-dev/klippy/kinematics/tilted_delta.py
+   * https://github.com/Mr-What/klipper/blob/tilted-delta-kinematics-dev/klippy/chelper/kin_tilted_delta.c
+   * https://github.com/Mr-What/klipper/blob/tilted-delta-kinematics-dev/klippy/chelper/__init__.py
+
+### Contents of Tetra3D
+
+Other code for a delta printer with tilted towers, usually to form a tetrahedron, are in this, Tetra3D project.
+
+One of the goals of this project is to minimize changes
+to the klipper project.
+Must calibration and analysis are done by reviewing klipper logs.
+Typical work flow is to command a ```FIRMWARE_RESTART``` to get a fresh
+log, do your calibration work, then bring the logfile to your host or desktop for analysis.
+Results can be placed into ```.cfg``` files.
+
+  * Analysis utilities are in the ```tools``` folder.
+  * Sample configuration files are in the ```doc/KlipperCfg``` folder.
+
+There is a significant amount of work in the form of macros,
+which are in the ```doc/KlipperCfg``` folder.
+
+### kinematics overview
+
+The current model as implemented, can have a real dimensionality of 18.  Base positions (6), tower angles (6), arm lengths(3), and endstop positions(3).
+
+Generally, you optimize simple parameters first, from a bed probe.
+A typical sequence is:
+   1. Guess tower base distance from center, measure arm lengths and endstop distance from bed.
+   2. Set all parameter triplets the same as each other, according to design.
+   3. probe bed
+   4. calibrate base radius and endstops.
+   5. starting with above params, calabrate arm lengths and endstops
+   5. probe bed
+   6. at this point, we hope the bed is sufficiently well calibrated to print.
+   7. print and measure cal print, and/or probe calibration plate.
+   8. re-probe bed
+   9. at this point, calibration should be good enough to calibrate all 18 parameters simultaneous.
+
+## Older notes
+
+The following needs to be reviewed.
+It was written before most of the work was done,
+and may not be sufficiently complete or accurate.
 
 Kinematics are solved using direction unit vectors for the towers, [Ahat;Bhat;Chat],
 which need not meet the constraint that they meet at an Apex.
