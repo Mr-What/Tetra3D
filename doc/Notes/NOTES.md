@@ -1,4 +1,4 @@
-eog# Tilted Delta Development Notes
+# Tilted Delta Development Notes
 [Calibration Log](https://docs.google.com/spreadsheets/d/1F8SSiFC5vxzJGwmjgO5lJFe-6YIsopfEGAam5U8VZzw/edit?usp=sharing "Calibration Log")
 
 ## Added tilted_delta kinematics to klipper
@@ -446,3 +446,36 @@ router groove tool.
 New, shallow dimple plate measured nominal 120mm on center dimples
 at 119.3mm.  Diagonal fairly close, hence square.
 I might add a scale option to ideal dimple locationsBoim1248
+
+It looks like ```FIRMWARE_RESTART``` is no longer re-starting ```klippy.log```.
+I may need to add to my ssh command to filter the file more.
+```
+n=$(grep -n 'Start printer' klippy.log | tail -n 1 | cut -d: -f1)
+
+if [ -n "$n" ]; then
+    tail -n +$((n + 1)) klippy.log 
+else
+    cat klippy.log
+fi
+```
+ 
+ Changed ```tail_klippy_log.py``` to include last 5 lines before
+ start of config echo, when available, so we can archive start time.
+ 
+ ### 261006
+ 
+On printed cal plate, large ball seemed useful below .1mm x-y movement.
+D2HW mostly useless below .25mm.  It was tracking layers, stair steps.  bottom was flat.
+At least on printed cal plate, large ball tip of MMH0 works much better.
+
+Either way, with parabolas, cones, radially symetric or not,
+I'm getting a lot of bad fits.
+Lowest probe clearly near vertex, but estimates not close to low probe.
+Try more complicated error metrics?
+
+Call lowest probe in cluster xMin,yMin,zMin.
+Use z err.  err = z-zMin up to some radius threshhold.
+Then do a linear fit.
+Threshhold and linear fit slope automatically computed, but ignored.
+Just quantities computed along the way.
+Parameters p(3) = vertex.

@@ -54,7 +54,8 @@ def process(log_path):
         print('WARNING: no "===== Config file =====" found in log', file=sys.stderr)
         tail = all_lines
     else:
-        tail = all_lines[start_index:]
+        tail = all_lines[max(0,start_index - 1):]
+    #    tail = all_lines[start_index:]
 
     # Compress consecutive Stats lines
     out = []
