@@ -1,6 +1,6 @@
 % retrieve bed probe data and reduce
 % implement standard procedure to load cal data
-function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog=[])
+function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog=[], plateScale=1)
     global tetra
     logFile = sprintf(tetra.logFileFmt,n)
     if exist(logFile, 'file') != 2
@@ -10,6 +10,9 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
         system(cmd)
     end
     [tp,cfg] = loadCalData(logFile, measFile, measFileIdeal);
+    tp.logFileName=logFile;
+    tp.measFile = measFile;
+    tp.measFileIdeal = measFileIdeal;
     probeFile = sprintf('probe%03d.csv')
     if exist(probeFile, 'file') != 2
         cmd=sprintf('cp /tmp/probe.csv probe%03d.csv',n)
@@ -35,9 +38,15 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
 
     if !isempty(plateProbeLog)
         ppCSV = [plateProbeLog(1:end-4), 'plateProbe.csv'];
-        [ppp, ppCfg] = loadCalData(plateProbeLog);
-        scl = 119.3/200;  % 1==ideal (machined), change for different scale from actual plate to ideal drawing
-        tp.calPlate = tetraCalProbe(ppp.probe,scl);
+        %[ppp, ppCfg] = loadCalData(plateProbeLog);
+        [ppp,ppCfg] = loadProbeDataFromKlipperLog(plateProbeLog);
+        %scl = 120/119.3;  % 1==ideal (machined), change for different scale from actual plate to ideal drawing
+        tp.calPlate = tetraCalProbe(ppp.probe,plateScale);  % compute stats of cal plate probe
+        tp.calPlate.logFileName = plateProbeLog;
+        pd = appendTowerPositions(ppp.p, tp.calPlate.dimple);
+        tp.calPlate.p = ppp.p;
+        tp.calPlate.pos = pd.pos;
+        tp.calPlate.probe_offset = ppp.probe_offset;
     end
     
     if bitand(tetra.plotFlags,1)

@@ -1,4 +1,7 @@
 % density based clustering
+%
+%  eps    -- estimated likely radius of a cluster?
+%  minpts -- minimum cluster size 
 function labels = dbscan(P, eps=5, minpts=8)
   n = rows(P);
   labels = zeros(n, 1);       % 0 = unvisited
