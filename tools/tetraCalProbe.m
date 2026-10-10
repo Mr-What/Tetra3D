@@ -5,8 +5,11 @@
 %    plateScale   -- scale of plate from nominal, 20mm probe spacing [1]
 %                    initial 3D printed plates tended to have some
 %                    shrinkage, so multiply ideal locations by this number
-%    pattern      --   2==probes were searching for bottom
-%                      1==probes tried to circle about rim
+%    pattern      --   flags :
+%                      1 -- fixed pattern around rough center estimate
+%                            0 --> probes were searching for center
+%                      2 -- Assume dimple slope is tan(15)
+%                            0 --> fit slope also
 %
 % ------- rim probe: 
 % Estimate dimple vertices from a probe which makes a guess
@@ -17,7 +20,7 @@
 % for the dimple center by probing, since probes
 % near the bottom may be dominated by noise and slop,
 % and hard to use.
-function pd = tetraCalProbe(probe, plateScale=1, pattern=1)
+function pd = tetraCalProbe(probe, plateScale=1, pattern=3)
     cluster = dbscan(probe,8,11);
     pd.probe = probe;
     pd.clusterId=cluster;
@@ -27,17 +30,27 @@ function pd = tetraCalProbe(probe, plateScale=1, pattern=1)
     fprintf(1,'%d clusters, %d not-clustered\n',n,length(i));
     pd.cluster = cell(n,1);
     pd.dimple=zeros(n,3);
+    m = tand(15);  % default nipple wall slope
     for k=1:n
         i = find(cluster==k);
         clusterSize = length(i);
         pk = probe(i,:);
         pd.cluster(k) = pk;
-        if pattern==1
-            pMin = estimateConeFitRim(pk);
-        elseif pattern==2
-            pMin = estimateConeFitSearch(pk);
+        if bitand(pattern,1)
+            % depricated.  initial probes are filtered out before writing probeNNNplate.csv
+            % omit points used for initial vertex estimate, they could over-weight cardinal direction fit
+            %disp('omitting initial rough search probes')
+            %disp(pk(1:4,:));
+            %pk = pk([5:clusterSize],:);
+            if bitand(pattern,2)
+                pMin = estimateConeFitFixed(pk,m);
+            else
+                [pMin,m] = estimateConeFit(pk,m);
+            end
         else
-            pMin = estimateConeFitSimple(pk);
+            disp('searching probes yet to be refactored');
+            %pMin = estimateConeFitSearch(pk);
+            %pMin = estimateConeFitSimple(pk);
         end
         %disp(round(1000*(pMin-pMin1)));
         pd.dimple(k,:) = pMin;
@@ -58,38 +71,68 @@ function pd = tetraCalProbe(probe, plateScale=1, pattern=1)
 end
 
 % ---------------------------- fit to ideal cone of known wall slope (m)
-
-function pMin = estimateConeFitRim(pk)
+%    150 deg v groove cutter, or emulated by 3D print, 15 deg slope
+function v = estimateConeFitFixed(pk, m=tand(15))
     global tetra
     tetra.callCount=0;
     tetra.callPeriod=10;
 
-    m = tand(15);  % assert: 150 deg v groove cutter, or emulated by 3D print
-    initialStep = [1,1,.2];
+    initialStep = [1,1,.5];
     smallBox = [.005, .005, .005];
     [zMin, iMin] = min(pk(:,3));
     initialGuess = pk(iMin,:);
-    maxIterations=444;
-    [pMin,nEval,status,err] = SimplexMinimize(...
-        @(p) fixedConeFitErr(p,m,pk),...
+    maxIterations=222;
+    [v,nEval,status,err] = SimplexMinimize(...
+        @(p) coneFitErrFixed(p,m,pk),...
    	initialGuess, initialStep, smallBox, maxIterations);
-    if bitand(tetra.plotFlags,4), plotFixedCone(m,pMin,pk); end
+    
+    if bitand(tetra.plotFlags,4)
+        plotFitConeR(m,v,pk);
+        disp('for 3D, enter :    plotFitCone(m,v,pk);');
+        keyboard
+        %plotFitCone(m,v,pk);
+    end
+end
+function [v,m] = estimateConeFit(pk, m0=tand(15))
+    global tetra
+    tetra.callCount=0;
+    tetra.callPeriod=10;
+
+    initialStep = [1,1,.2,.02];
+    smallBox = [.005, .005, .005, .0001];
+    [zMin, iMin] = min(pk(:,3));
+    initialGuess = [pk(iMin,:),m0];
+    maxIterations=444;
+    [fit,nEval,status,err] = SimplexMinimize(...
+        @(p) coneFitErr(p,m,pk),...
+   	initialGuess, initialStep, smallBox, maxIterations);
+    v=fit(1:3);
+    m=fit(4);
+    if bitand(tetra.plotFlags,4)
+        plotFitConeR(m,v,pk);
+        plotFitCone(m,v,pk);
+    end
 end
 
-function err = fixedConeFitErr(p,m,pk)
+function err = coneFitErrFixed(p,m,pk)
+    err = coneFitErr([p,m],pk);
+end
+
+function err = coneFitErr(p,pk)
     global tetra
 
+    m = p(4);
     r = norm([pk(:,1)-p(1), pk(:,2)-p(2)],2,'rows');
-    err = p(:,3) - p(3) - m*r;
+    err = pk(:,3) - p(3) - m*r;
     err=mean(err .* err);
 
     if (mod(tetra.callCount, tetra.callPeriod) == 0) && bitand(tetra.plotFlags,4) , ...
-        fprintf(2,'%d %.6f  %.3f %.3f %.3f\n',tetra.callCount,err, p); end
+            fprintf(2,'%d %.6f  %.3f %.3f %.3f\t%.3f\n',tetra.callCount,err, p); end
     tetra.callCount = tetra.callCount + 1;
 end
 
 % 3d cone err plot
-function plotFixedCone(m,v,p)
+function plotFitCone(m,v,p)
     figure 1
     hold off
     plot3(p(:,1)-v(1),p(:,2)-v(2),p(:,3)-v(3),'mo');
@@ -101,7 +144,7 @@ function plotFixedCone(m,v,p)
         plot3([0,rt*cosd(a)], [0,rt*sind(a)], [0,zt]);
     end
     a=[0:2:360];
-    for z=.2:.2:zt
+    for z=.25:.25:zt
         r = z / m;
         x = r * cosd(a);
         y = r * sind(a);
@@ -115,11 +158,33 @@ function plotFixedCone(m,v,p)
     tit = sprintf('%d probes, vertex [%.3f, %.3f, %.3f]',size(p,1),v);
     title(tit);
     disp(tit);
-    xlabel X
+    xlabel(sprintf('X(mm) slope=%.3f[0.268]',m));
     ylabel Y
     hold off
     %disp('any key to continue...');kbhit();
-    keyboard
+    %keyboard
+end
+
+% 2d cone err plot
+function plotFitConeR(m,v,p)
+    r = norm([p(:,1)-v(1),p(:,2)-v(2)],2,'rows');
+    figure 1
+    hold off
+    plot(r,p(:,3)-v(3),'mo');
+    grid on
+    hold on
+    zt = 1.4; % top of reference cone
+    rt = zt/m;  % radius at top of reference cone
+    plot([0,rt],[0,zt],'r');
+    axis([0,5,-0.2,1.4]);
+    tit = sprintf('%d probes, vertex [%.3f, %.3f, %.3f]',size(p,1),v);
+    title(tit);
+    disp(tit);
+    xlabel(sprintf('r(mm) slope=%.3f[0.268]',m));
+    ylabel Z
+    hold off
+    %disp('any key to continue...');kbhit();
+    %keyboard
 end
 
 % ------------------------------------ find cal plate rotation and shift
@@ -248,104 +313,106 @@ function [tip,c] = estimateParabFit(q)
     if bitand(tetra.plotFlags,4), plotParabFit(q,fit); end
 end
 
-function [tip,m] = estimateConeFit(q)
-    global tetra
-    tetra.callCount=0;
-    tetra.callPeriod=10;
-    
-    initialStep = [1,1,1,.04];
-    smallBox = [initialStep(1:3)/2000, .0001];
-    
-    initialGuess = [median(q(:,1:2)),min(q(:,3)),.26];  % a little less than tan(15), for 150 deg tip tool
-    maxIterations=444;
-    [fit,nEval,status,err] = SimplexMinimize(...
-        @(p) coneFitErr1(p,q),...
-   	initialGuess, initialStep, smallBox, maxIterations);
-    tip=fit(1:3);
-    m = fit(4);
-    if bitand(tetra.plotFlags,4), plotConeFit(q,fit); end
-end
+%function [tip,m] = estimateConeFit(q)
+%    global tetra
+%    tetra.callCount=0;
+%    tetra.callPeriod=10;
+%    
+%    initialStep = [1,1,1,.04];
+%    smallBox = [initialStep(1:3)/2000, .0001];
+%    
+%    initialGuess = [median(q(:,1:2)),min(q(:,3)),.268];  % ~tan(15), for 150 deg tip tool
+%    maxIterations=444;
+%    [fit,nEval,status,err] = SimplexMinimize(...
+%        @(p) coneFitErr1(p,q),...
+%   	initialGuess, initialStep, smallBox, maxIterations);
+%    tip=fit(1:3);
+%    m = fit(4);
+%    if bitand(tetra.plotFlags,4), plotConeFit(q,fit); end
+%end
 
-function err = coneFitErr1(p,dat)
-    global tetra
+% depricated for more general versions above
+%function err = coneFitErr1(p,dat)
+%    global tetra
+%
+%    x0 = p(1);
+%    y0 = p(2);
+%    z0 = p(3);
+%    m  = p(4);
+%    dxy = [dat(:,1) - x0, dat(:,2) - y0];
+%    r = norm(dxy,2,'rows');
+%    z = m*r;
+%    err = dat(:,3) - z0 - z;
+%    %err = mean(abs(err));    % MAE z-error
+%    err = mean(err .* err);  % MSE z-error
+%    if (m < 0.01)
+%        %disp('applying penalty for inverted cone');
+%        weight = (1-m-0.011)^4;
+%        err = err * weight;
+%    end
+%    if (mod(tetra.callCount, tetra.callPeriod) == 0) && bitand(tetra.plotFlags,4) , ...
+%        fprintf(2,'%d %.6f  %.2f %.2f %.2f  %.4f\n',tetra.callCount,err, p); end
+%    tetra.callCount = tetra.callCount + 1;
+%end
 
-    x0 = p(1);
-    y0 = p(2);
-    z0 = p(3);
-    m  = p(4);
-    dxy = [dat(:,1) - x0, dat(:,2) - y0];
-    r = norm(dxy,2,'rows');
-    z = m*r;
-    err = dat(:,3) - z0 - z;
-    %err = mean(abs(err));    % MAE z-error
-    err = mean(err .* err);  % MSE z-error
-    if (m < 0.01)
-        %disp('applying penalty for inverted cone');
-        weight = (1-m-0.011)^4;
-        err = err * weight;
-    end
-    if (mod(tetra.callCount, tetra.callPeriod) == 0) && bitand(tetra.plotFlags,4) , ...
-        fprintf(2,'%d %.6f  %.2f %.2f %.2f  %.4f\n',tetra.callCount,err, p); end
-    tetra.callCount = tetra.callCount + 1;
-end
+% re-wrote (better) above : 3d cone err plot
+%function plotConeFit3D(p,fit)
+%    %xx = linspace(floor(min(p0(:,1))),ceil(max(p0(:,1))),20);
+% %yy = linspace(floor(min(p0(:,2))),ceil(max(p0(:,2))),20);
+% %   [xg,yg] = meshgrid(xx,yy);
+% %    zz = evalPoly2D(xg,yg,coef);
+%    figure 1
+%    hold off
+%    plot3(p(:,1),p(:,2),p(:,3),'mo');
+%    grid on
+%    hold on
+%    rt=3; % radius at top of line
+%    zt = fit(4)*rt;
+%    for a=0:30:355
+%        plot3(fit(1)+[0,rt*cosd(a)], fit(2)+[0,rt*sind(a)], fit(3)+[0,zt]);
+%    end
+%    a=[0:2:360];
+%    for z=.2:.2:zt
+%        r = z / fit(4);
+%        x = r * cosd(a) + fit(1);
+%        y = r * sind(a) + fit(2);
+%        zc = zeros(1,length(a)) + fit(3) + z;
+%        plot3(x,y,zc);
+%    end
+%    %mesh(xg,yg,zz);
+%    tit = sprintf('%d probes, minima [%.3f, %.3f, %.3f]',size(p,1),fit(1:3));
+%    title(tit);
+%    xlabel X
+%    ylabel Y
+%    hold off
+%    %disp('any key to continue...');kbhit();
+%    keyboard
+%end
 
-% 3d cone err plot
-function plotConeFit3D(p,fit)
-    %xx = linspace(floor(min(p0(:,1))),ceil(max(p0(:,1))),20);
-%yy = linspace(floor(min(p0(:,2))),ceil(max(p0(:,2))),20);
-%    [xg,yg] = meshgrid(xx,yy);
-%    zz = evalPoly2D(xg,yg,coef);
-    figure 1
-    hold off
-    plot3(p(:,1),p(:,2),p(:,3),'mo');
-    grid on
-    hold on
-    rt=3; % radius at top of line
-    zt = fit(4)*rt;
-    for a=0:30:355
-        plot3(fit(1)+[0,rt*cosd(a)], fit(2)+[0,rt*sind(a)], fit(3)+[0,zt]);
-    end
-    a=[0:2:360];
-    for z=.2:.2:zt
-        r = z / fit(4);
-        x = r * cosd(a) + fit(1);
-        y = r * sind(a) + fit(2);
-        zc = zeros(1,length(a)) + fit(3) + z;
-        plot3(x,y,zc);
-    end
-    %mesh(xg,yg,zz);
-    tit = sprintf('%d probes, minima [%.3f, %.3f, %.3f]',size(p,1),fit(1:3));
-    title(tit);
-    xlabel X
-    ylabel Y
-    hold off
-    %disp('any key to continue...');kbhit();
-    keyboard
-end
-
+% re-wrote, use above version
 % if we are asserting radial symmetry, do plots in terms of r
-function plotConeFit(p,fit)
-    x0 = fit(1);
-    y0 = fit(2);
-    z0 = fit(3);
-    m  = fit(4);
-    dxy = [p(:,1) - x0, p(:,2) - y0];
-    r = norm(dxy,2,'rows');
-    figure 1
-    hold off
-    plot(r,p(:,3),'mo');
-    grid on
-    hold on
-    ra = [0,3];
-    plot(ra,m*ra+z0,'r');
-    xlabel(sprintf('vertex at [%.3f, %.3f, %.3f]mm',fit(1:3)));
-    ylabel('Z(mm)');
-    tit = sprintf('%d probes',size(p,1));
-    title(tit);
-    hold off
-    keyboard
-    %disp('any key to continue...');kbhit();
-end
+%function plotConeFit(p,fit)
+%    x0 = fit(1);
+%    y0 = fit(2);
+%    z0 = fit(3);
+%    m  = fit(4);
+%    dxy = [p(:,1) - x0, p(:,2) - y0];
+%    r = norm(dxy,2,'rows');
+%    figure 1
+%    hold off
+%    plot(r,p(:,3),'mo');
+%    grid on
+%    hold on
+%    ra = [0,3];
+%    plot(ra,m*ra+z0,'r');
+%    xlabel(sprintf('vertex at [%.3f, %.3f, %.3f]mm',fit(1:3)));
+%    ylabel('Z(mm)');
+%    tit = sprintf('%d probes',size(p,1));
+%    title(tit);
+%    hold off
+%    keyboard
+%    %disp('any key to continue...');kbhit();
+%end
 
 % if we are asserting radial symmetry, do plots in terms of r
 function plotParabFit(p,fit)

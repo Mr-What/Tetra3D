@@ -37,14 +37,23 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
             tp.bedMedian, tp.bedMean, tp.bedStDev);
 
     if !isempty(plateProbeLog)
-        ppCSV = [plateProbeLog(1:end-4), 'plateProbe.csv'];
+        
+        ppCSV = [plateProbeLog(1:end-4), 'plate.csv'];
         %[ppp, ppCfg] = loadCalData(plateProbeLog);
         [ppp,ppCfg] = loadProbeDataFromKlipperLog(plateProbeLog);
-        %scl = 120/119.3;  % 1==ideal (machined), change for different scale from actual plate to ideal drawing
-        tp.calPlate = tetraCalProbe(ppp.probe,plateScale);  % compute stats of cal plate probe
+        if exist(ppCSV,'file') != 2
+            cmd = sprintf('%s/tetraExtractDimpleProbes.sh %s > %s',tetra.toolPath,plateProbeLog,ppCSV)
+            system(cmd)
+        end
+        plateProbe = load(ppCSV);  % dimple probe sets
+        timeAndIndex = plateProbe(:,1:2);
+        plateProbe=plateProbe(:,3:5);
+        %scl = 119.3/200;  % 1==ideal (machined), change for different scale from actual plate to ideal drawing
+        tp.calPlate = tetraCalProbe(plateProbe,plateScale);  % compute stats of cal plate probe
         tp.calPlate.logFileName = plateProbeLog;
-        pd = appendTowerPositions(ppp.p, tp.calPlate.dimple);
+        tp.calPlate.probeFileName=ppCSV;
         tp.calPlate.p = ppp.p;
+        pd = appendTowerPositions(tp.calPlate.p, tp.calPlate.dimple);
         tp.calPlate.pos = pd.pos;
         tp.calPlate.probe_offset = ppp.probe_offset;
     end
