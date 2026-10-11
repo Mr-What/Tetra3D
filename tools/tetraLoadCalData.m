@@ -3,12 +3,7 @@
 function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog=[], plateScale=1)
     global tetra
     logFile = sprintf(tetra.logFileFmt,n)
-    if exist(logFile, 'file') != 2
-        %cmd=sprintf('ssh 192.168.2.66 ~pi/bin/tailLog.sh > %s',logFile)
-        cmd=sprintf('ssh %s %s/tailLog.sh > %s',tetra.host, ...
-                    tetra.hostUtilPath,logFile)
-        system(cmd)
-    end
+    tetraGetLogFile(logFile);
     [tp,cfg] = loadCalData(logFile, measFile, measFileIdeal);
     tp.logFileName=logFile;
     tp.measFile = measFile;
@@ -37,31 +32,15 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
             tp.bedMedian, tp.bedMean, tp.bedStDev);
 
     if !isempty(plateProbeLog)
-        
-        ppCSV = [plateProbeLog(1:end-4), 'plate.csv'];
-        %[ppp, ppCfg] = loadCalData(plateProbeLog);
-        [ppp,ppCfg] = loadProbeDataFromKlipperLog(plateProbeLog);
-        if exist(ppCSV,'file') != 2
-            cmd = sprintf('%s/tetraExtractDimpleProbes.sh %s > %s',tetra.toolPath,plateProbeLog,ppCSV)
-            system(cmd)
-        end
-        plateProbe = load(ppCSV);  % dimple probe sets
-        timeAndIndex = plateProbe(:,1:2);
-        plateProbe=plateProbe(:,3:5);
-        %scl = 119.3/200;  % 1==ideal (machined), change for different scale from actual plate to ideal drawing
-        tp.calPlate = tetraCalProbe(plateProbe,plateScale);  % compute stats of cal plate probe
-        tp.calPlate.logFileName = plateProbeLog;
-        tp.calPlate.probeFileName=ppCSV;
-        tp.calPlate.p = ppp.p;
-        pd = appendTowerPositions(tp.calPlate.p, tp.calPlate.dimple);
-        tp.calPlate.pos = pd.pos;
-        tp.calPlate.probe_offset = ppp.probe_offset;
+        tetraGetLogFile(plateProbeLog);  % make sure plate probe log is available
+        tp.calPlate = tetraLoadPlateProbeFromLog(plateProbeLog,plateScale);
     end
     
     if bitand(tetra.plotFlags,1)
         figure 1; hold off;
         p=tp.probe;ps=tp.probeSamples;z0=tp.probe_offset(3);
         plot3(p(:,1),p(:,2),p(:,3)-z0,'o-');
+        view(0,90);
         xlabel X;ylabel Y;grid on; hold on;
         plot3(ps(:,1),ps(:,2),ps(:,3),'rd-');
         legend('estimate','samples');
@@ -74,12 +53,12 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
             figure 2; hold off;
             plot3(p(:,1),p(:,2),p(:,3),'o');
             grid on;hold on;xlabel X;ylabel Y;
+            view(0,90);
             plot3(d(:,1),d(:,2),d(:,3),'rx');
             legend('plate probes','dimple vertex');
-            title(['Cal Plate probes ',ppCSV]);
+            title(['Cal Plate probes ',tp.calPlate.plateProbeFile]);
             hold off
             figure 1
         end
     end
 end
-    

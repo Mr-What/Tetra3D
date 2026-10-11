@@ -1,10 +1,8 @@
 % load probe, and optionally measured calibration print data
 % into a structure, and return.
 function [tp,cfg] = loadCalData(logFile, measFile=[], measFileIdeal=[])
-    global tetra
-
     if ischar(logFile)
-        % this should load parameters as echoed from printer.cfg,
+        % load parameters as echoed from printer.cfg,
         % and load bed-probe results from klippy.log
         [tp0,cfg] = loadProbeDataFromKlipperLog(logFile);
     else
@@ -13,17 +11,7 @@ function [tp,cfg] = loadCalData(logFile, measFile=[], measFileIdeal=[])
         cfg=[];
         return
     end
-    
-    %-- moved this stuff to loadProbeDataFromKlipperLog
-    % copy over any other metadata needed from log
-    %probe_offset = [cfg.probe.x_offset, ...
-    %                cfg.probe.y_offset, ...
-    %                cfg.probe.z_offset];
-    %fprintf(2,'probe_offset=[%.3f,%.3f,%.3f]\n',probe_offset);
-    %disp('Override probe_offset if necessary.  Otherwise, just dbcont :');
-    %keyboard
-    %tp.probe_offset = probe_offset;
-    
+
     if isempty(measFile)
         disp('NOTE : No calibration print measurements available.');
         tp = tp0;

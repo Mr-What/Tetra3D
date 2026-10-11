@@ -5,10 +5,12 @@
 %  data and last bed probe from a long klippy.log before
 %  using this.
 function [tp,cfg] = loadProbeDataFromKlipperLog(logFile)
-    cfg = loadKlipperCfg(logFile);  % either printer.cfg or klippy.log
+    global tetra
+    cfg = klipLoadCfg(logFile);  % either printer.cfg or klippy.log
     p = tetraGetParams(cfg);
-    cmd = sprintf('grep "Result: at .*estimate" "%s" | sed "s/^Result: at//" | sed "s/estimate contact at z=/,/" > /tmp/probe.csv',logFile);
-    disp(cmd)
+    %cmd = sprintf('grep "Result: at .*estimate" "%s" | sed "s/^Result: at//" | sed "s/estimate contact at z=/,/" > /tmp/probe.csv',logFile);
+    cmd = sprintf('%s/klipExtractProbeResults.sh "%s" > /tmp/probe.csv',...
+                  tetra.toolPath, logFile)
     system(cmd)
     probe =load('/tmp/probe.csv');
 

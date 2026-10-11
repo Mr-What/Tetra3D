@@ -1,7 +1,7 @@
-function cfg = loadKlipperCfg(filename)
-% LOADKLIPPERCFG  Parse a Klipper printer.cfg file into a struct of structs.
+function cfg = klipLoadCfg(filename)
+% KLIPLOADCFG  Parse a Klipper printer.cfg file into a struct of structs.
 %
-%   cfg = loadKlipperCfg('printer.cfg')
+%   cfg = klipLoadCfg('printer.cfg')
 %
 % Returns a struct where each field corresponds to a config section, e.g.:
 %   cfg.printer.delta_radius        -> double scalar or row vector
@@ -19,13 +19,14 @@ function cfg = loadKlipperCfg(filename)
 %
 % Comment lines (starting with # or ;) and blank lines are ignored.
 
+  tetraGetLogFile(filename);  % make sure we have log since last restart
   cfg = struct();
   current_section = '';
   current_key     = '';
 
   fid = fopen(filename, 'r');
   if fid < 0
-    error('loadKlipperCfg: cannot open file: %s', filename);
+    error('klipLoadCfg: cannot open file: %s', filename);
   end
 
   while ~feof(fid)

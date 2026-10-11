@@ -1,5 +1,6 @@
 % make a pretty contour plot from irregular sampled bed probe values
-function p = klipPlotProbes(probe)
+%     for calibration plates, you may want to add a prefix like desc='Dimple' or desc='Cal Plate A'
+function p = klipPlotProbes(probe,desc='Bed')
 
     p = mergePoints(probe);  % replace similar measurements with median
     xLo = 10 * floor(min(p(:,1))/10-1);
@@ -17,8 +18,10 @@ function p = klipPlotProbes(probe)
     z=round(z*1000);  % convert to microns
     zMax = max(p(:,3)) * 1000
     zMin = min(p(:,3)) * 1000
-    dz = round((zMax-zMin)/2);
-    cz = round((zMax+zMin)/2)
+    %dz = round((zMax-zMin)/2);
+    cz = (zMax+zMin)/2;  % make cz a round number
+    cz = 100 * round(cz/100);
+    dz = max(abs([zMin,zMax]-cz));
     z(isnan(zo)) = round(dz/67.5);  % 0 displayed as color slightly below 0?!??
 
     centerWhite
@@ -38,7 +41,7 @@ function p = klipPlotProbes(probe)
     colorbar
     xlabel('X(mm)');
     ylabel('Y(mm)');
-    title(sprintf('Bed probes (offset=%d microns)',cz));
+    title(sprintf('%s probes (offset=%d microns)',desc,cz));
 
     for k=1:rows(p)
         plot(p(k,1),p(k,2),'mo');
