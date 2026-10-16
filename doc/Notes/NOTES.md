@@ -479,3 +479,50 @@ Then do a linear fit.
 Threshhold and linear fit slope automatically computed, but ignored.
 Just quantities computed along the way.
 Parameters p(3) = vertex.
+
+### 261011
+
+Changed plate probe approach.
+   1. Probe cardinal points around expected center of dimple
+   2. compute a better estimate of center of dimple
+   3. probe standard pattern of points around rough estimate of center
+   4. In analysis, look only at the standard pattern of probes to estimate dimple vertex.
+
+This prevents an over-weight to the estimate from an
+area where there were there were more probes.
+It is also much easier to analyse.
+
+![Neighborhoods around dimple vertices](./probe107.png)
+![Neighborhood height around dimple vertices](./probe107side.png)
+
+Refactored some code for this approach,
+and new naming standard where functions specific to klipper
+start with ```klip```.
+Functions specific to tilted_delta model start with ```tetra```.
+I think the hump pattern to the plate probes is likely
+to be warping of the 3D print.
+
+![bed probe 108](./bedProbes108.png)
+
+The bed probe looks about as good as they are getting at this stage.
+
+### 261012
+
+Processed bed probe108 with plate probe107.
+Got significantly different parameters, but after
+entering them I got the flattest bed probe109 ever.
+
+![bed probe 109](./bedProbes109.png)
+
+Unfortunately, the scale was terrible, and there were
+bugs in the error computation for the plate.
+ignore 109.
+
+### 261014
+
+Got a cal update using MMH0 probe, bed probe112,
+plate probe111, using param update from 108.
+Pretty good looking results, but print
+measurements still not great.
+
+Looking into weighted estimates.Fr

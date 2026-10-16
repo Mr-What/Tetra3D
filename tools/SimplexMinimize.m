@@ -2,9 +2,10 @@
 % Based off of Wikipedia article, circa 2015
 
 function [fit,nEval,status,err] = SimplexMinimize(fcn,...
-      initialGuess,initialStep,smallBox,maxIter,errEps)
+                                                  initialGuess,initialStep,smallBox,maxIter,errEps)
+global verboseFlags 
 if (nargin < 5), maxIter = 1000; end
-if (nargin < 6), errEps  = .001; end
+if (nargin < 6), errEps  = .00001; end
 
 status = 0;  % Normal completion
 nDim = prod(size(initialGuess));
@@ -49,7 +50,9 @@ while(1)
         if (nEval > maxIter)
            status = -1;  % did not converge
         end
-        fprintf(1,'err = %9.6f ; nEval=%d\n',err,nEval);
+        if verboseFlags.simplex > 0
+            fprintf(1,'err = %9.6f ; nEval=%d\n',err,nEval);
+        end
         return;
     end
 

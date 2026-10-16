@@ -8,14 +8,18 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
     tp.logFileName=logFile;
     tp.measFile = measFile;
     tp.measFileIdeal = measFileIdeal;
-    probeFile = sprintf('probe%03d.csv')
+    probeFile = [logFile(1:end-4),'.csv']
     if exist(probeFile, 'file') != 2
-        cmd=sprintf('cp /tmp/probe.csv probe%03d.csv',n)
-        system(cmd)  % save to a file for future convenience
+        cmd=sprintf('%s/tetraExtractProbeResults.sh "%s" > "%s"',...
+                    tetra.toolPath, logFile, probeFile)
+        system(cmd)
     end
-    probeSamplesFile = sprintf('probeSamples%03d.csv',n)
+    probe = load(probeFile);  % PROBE RESULTS logs are toolhead position, no probe offset
+    probeTime=probe(:,1);
+    tp.probe = probe(:,2:4);
+    probeSamplesFile = [logFile(1:end-4),'samples.csv'];
     if exist(probeSamplesFile, 'file') != 2
-        cmd=sprintf('%s/extractProbeSamples.pl < %s > %s',tetra.toolPath,...
+        cmd=sprintf('%s/klipExtractProbeSamples.sh %s > %s',tetra.toolPath,...
                     logFile,probeSamplesFile)
         system(cmd)
     end
@@ -23,7 +27,7 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
 
     z0 = cfg.probe.z_offset;
     tp.probe_offset = [cfg.probe.x_offset, cfg.probe.y_offset, z0];
-    z = tp.probe(:,3) - z0;
+    z = tp.probe(:,3);  % tetra PROBE RESULTS lines have no probe offset applied : z = tp.probe(:,3) - z0;
     tp.bedMedian = median(z);
     tp.bedMean   = mean(z);
     tp.bedStDev  = std(z);

@@ -20,7 +20,30 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
 
     gp = fSetParams(p,igp);  % copy parameter vector to standard param struct
     [err,errZ,badZ] = tetraProbeErr(pp.k, pp.pos, gp.k);
+    tetra.bedRMS = err;  % dirty hack to make available outside Simplex
+
     %fprintf(2,'probe_err=%.4g',err);
+
+    if isfield(pp,'calPlate')
+        if (tetra.callCount <= 1)
+            disp('Using calibration plate measurements.');
+            %if tetra.echoMeas
+            %    for m = 1:length(pp.measXY.id)
+            %        fprintf(1,'   %s = %6.2f\n', pp.measXY.id(m,:), pp.measXY.dist(m));
+            %    end
+            %    tetra.echoMeas = false;
+            %end
+        end
+        [rms,errXY,badXY] = tetraPlateErr(pp.k, pp.calPlate, gp.k);
+        tetra.plateRMS = rms;  % dirty hack to make available outside Simplex
+        %fprintf(2,'   meas_err=%4g',mse);
+        err = err * rms*rms;  % extra weight on plate probe
+    else
+        errXY=1;
+        badXY=0;
+    end
+
+
     if isfield(pp,'measXY')
         if (tetra.callCount <= 1)
             disp('Using calibration print measurements.');
@@ -31,13 +54,16 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
                 tetra.echoMeas = false;
             end
         end
-        [mse,errXY,badXY] = tetraPrintErr(pp.k, pp.measXY, gp.k);
+        [rms,errXY,badXY] = tetraPrintErr(pp.k, pp.measXY, gp.k);
         %fprintf(2,'   meas_err=%4g',mse);
-        err = err * mse * mse;  % extra weight on print
+        tetra.measRMS=rms;
+        err = err * rms * rms;  % extra weight on print
     else
         errXY=1;
         badXY=0;
     end
+
+    err = err*1000;  % scale to be easier to read    
     if (mod(tetra.callCount,tetra.callPeriod) == 0)
         %fprintf(2,'\n');
         fprintf(1,'%4d %.6g  ',tetra.callCount, err);
@@ -46,7 +72,7 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
     end
 end
 
-% pos is commanded tower location at probe trigger
+% pos is commanded tower location at bed probe trigger
 function [err, errZ, bad] = tetraProbeErr(pk, pos, gk)
     err = 0;
     n = size(pos,1);
@@ -54,24 +80,28 @@ function [err, errZ, bad] = tetraProbeErr(pk, pos, gk)
     % update tower positions for differences in stepper calibration, if any.
     tet = commandedTowerPositions(pk, pos, gk);
 
-    m = 1;
-    errZ = zeros(n,1);
-    z0 = pk.probe_offset(3);  % probe trigger at z_offset, NOT 0
-    bad = int32(errZ);
-    for j=1:n
-        dz = tetra2cart(gk, tet(j,:));  % guess at actual effector position
-        if !isreal(dz)
-            bad(j) = 1;
-        end
-        errZ(j) = real(dz(3)) - z0;
-    end
-    nBad = sum(bad);
+    [gpos,bad,nBad] = tetra2cartV(tet,gk);
 
+    z0 = pk.probe_offset(3);  % probe trigger at z_offset, NOT 0
+    %bad = int32(errZ);
+    %m = 1;
+    %errZ = zeros(n,1);
+    %for j=1:n
+    %    dz = tetra2cart(gk, tet(j,:));  % guess at actual effector position
+    %    if !isreal(dz)
+    %        bad(j) = 1;
+    %    end
+    %    errZ(j) = real(dz(3)) - z0;
+    %end
+    %nBad = sum(bad);
+    errZ = gpos(:,3) - z0;
+    
     if nBad > 0
         err = errZ(bad == 0);
-        err = sqrt(mean(err .* err)) * (nBad+1);  % penalty of out of envelope probe
+        err = sqrt(mean(err .* err));
+        err = err * (nBad+1);  % penalty of out of envelope probe
     else
-        err = sqrt(mean(errZ .* errZ));
+        err = sqrt(mean(errZ .* errZ));  % RMSE bed level
     end
     %fprintf(2,'Bed Probe RMSE=%.6g',err);
 end
@@ -105,9 +135,60 @@ function [err, errXY, bad] = tetraPrintErr(pk, pm, gk)
         err = errXY(find(bad == 0));
         err = mean(err .* err) ^ (nBad+1);  % penalty for out of envelope probe
     else
-        %err = mean(errXY .* errXY); % more weight than bed probe errors
-        err = sqrt(mean(errXY .* errXY));
+        err = sqrt(mean(errXY .* errXY));  % RMSE distance measures
     end
     %fprintf(2,'\tXY measurement MSE=%.6g',err);
     %hold off; plot(errXY,'x'); grid on; ginput(1)
 end
+
+
+% at this time, we are looking only at X,Y error from plate probes.
+% cheap, prototype calibration dimple plates may be warped.
+%
+% pk - parameters used for print
+% pm - measurements of print
+% gk - guess at better parameters to use for print.
+function [err, errXY, bad] = tetraPlateErr(pk, calPlate, gk)
+    % update tower positions for differences in stepper calibration, if any.
+    twr = commandedTowerPositions(pk, calPlate.pos, gk);
+    [gpos,bad,nBad] = tetra2cartV(twr,gk);
+    idealVertices = calPlate.dimpleIdeal;
+    if nBad > 0
+        fprintf(2,'removing %d non-physical vertices',nBad);
+        i = find(bad == 0);
+        gpos=gpos(i,:);
+        idealVertices = idealVertices(i,:);
+    end
+    % find best fit rotation and shift of mounted plate to these readings.
+    %[rot,x0,y0] = estimateRotShift(idealVertices,gpos,999);
+    [rot,x0,y0] = rigidTransform2D(gpos(:,1:2),idealVertices);
+    %shiftedVertices = applyRotShift(rot,x0,y0,idealVertices);
+    shiftedVertices = applyRigidTransform2D(idealVertices,rot,x0,y0);
+    
+    % toolhead position from guessed parameters, minus
+    %    likely location after estimated plate mounting rot, shift
+    errXY = gpos(:,1:2) - shiftedVertices(:,1:2);
+    err = errXY .* errXY;
+    err = sum(err,2);  %squared err
+    err = sqrt(mean(err)); %  RMS X,Y offset from likely dimple vertices to measured
+    if nBad > 0
+        fprintf(2,'adjusting plate error for %d bad points.\n',nBad);
+        err = mean(err(bad == 0)) * (nBad+1); %MSE
+    end
+end
+
+function [gpos,bad,nBad] = tetra2cartV(twr,gp)
+    n = size(twr,1);
+    gpos = zeros(n,3);
+    errZ = zeros(n,1);
+    bad = int32(errZ);
+    for j=1:n
+        xyz = tetra2cart(gp, twr(j,:));  % guess at actual effector position
+        if !isreal(xyz)
+            bad(j) = 1;
+        end
+        gpos(j,:) = real(xyz);
+    end
+    nBad = sum(bad);
+end
+

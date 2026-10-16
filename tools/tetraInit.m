@@ -22,6 +22,11 @@ tetra.host = 'tetrapi'; % 192.168.2.66
 % path to tetra utilities on klipper host computer, with trailing /
 tetra.hostUtilPath = '~pi/bin';
 
+% there are places where we don't want simplex diagnostics.
+% set default to allow simplex diagnostics
+global verboseFlags
+verboseFlags.simplex=1;
+
 % ============
 tn=fieldnames(tetra);
 for k=1:length(tn), fprintf(1,'tetra.%s=',tn{k}); disp(tetra.(tn{k})); end

@@ -6,6 +6,7 @@
 %             and carriage position data, returned by getProbePositions()
 %             and optionally a set of calibration print measurements,
 %             and their expected values.
+%             OR calPlate struct from loading calibration plate probes
 %             We usually store this data as .m code that
 %             defines all the measurements, which can be
 %             loaded by loadAsStruct(fileName.m)
@@ -22,19 +23,24 @@ function tp = tetraRefineRPAZTE(PP,IGP=[], ...
             smallBox = [2,2,2, 2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000)
     global tetra;
     tetra.callCount = 0;  % tetraFitErr() will count number of calls in SimplexMinimize
+    tetra.callPeriod = 50;
 
     fprintf(1,'probe_offset=[%.3f,%.3f,%.3f]\n',PP.probe_offset);
     
     % ----- initial data plot
     figure(2); [c,ax,pFit] = plotInitialProbe(PP.probe);
     if isempty(IGP)
-        gp = getTetraParams(PP.p);
+        gp = tetraGetParams(PP.p);
     else
-        gp = getTetraParams(IGP);
+        gp = tetraGetParams(IGP);
         
     end
     gp.verbose = 0;
 
+    % reset global storage for return of error components
+    tetra.bedRMS = 0;
+    tetra.plateRMS = 0;
+    tetra.measRMS = 0;
     
     initialGuess = [gp.p.delta_radius, ...
                     gp.p.delta_angles, ...
@@ -42,17 +48,22 @@ function tp = tetraRefineRPAZTE(PP,IGP=[], ...
                     gp.p.tilt_radial, ...
                     gp.p.tilt_tangential, ...
                     gp.p.position_endstops];
-    maxIterations=2000;
+    maxIterations=4000;
 
     [fit,nEval,status,err] = SimplexMinimize(...
         @(p) tetraFitErr(p,PP,gp,@setTetraRPAZTE),...
-   	initialGuess, initialStep, smallBox, maxIterations)
+   	initialGuess, initialStep, smallBox, maxIterations);
 
     % return refined tetra (tilted) parameter set
     tp = setTetraRPAZTE(fit,gp);
     tp.err   = err;
     tp.nEval = nEval;
 
+    % retrieve error components
+    tp.bedRMS   = tetra.bedRMS;
+    tp.plateRMS = tetra.plateRMS;
+    tp.measRMS  = tetra.measRMS;
+    
     % plot parameter fit, retrieve full parameter vector(s)
     [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,PP,gp,@setTetraRPAZTE);
     pf = PP.probe;  pf(:,3) = pf(:,3) + errZ;
@@ -73,5 +84,5 @@ function gp = setTetraRPAZTE(p,igp)
     gp.tilt_radial = p(10:12);
     gp.tilt_tangential = p(13:15);
     gp.position_endstops = p(16:18);
-    gp = getTetraParams(gp);  % re-build kinematic params
+    gp = tetraGetParams(gp);  % re-build kinematic params
 end

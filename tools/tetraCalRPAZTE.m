@@ -11,9 +11,12 @@
 %           E - endstops
 %
 %  tc  -- tetra calibration data, like from tetraLoadCalData(33,measFile='calMeas033.m')
+%            better: tc = tetraLoadCalData(33,[],[],prbe032.log',119.3/120)
+%             for bed probe in probe033.log, plate probe in probt032.log,
+%                  where printed plate had shrinkage scale error of 119.3/120
 %  gp0 -- initial guess at tetra parameters, tc.p is default
 function gp = tetraCalRPAZTE(tc, gpp=[])
-    gp = tetraRefineRPAZTE(tp,gpp);
+    gp = tetraRefineRPAZTE(tc,gpp);
 
     % do some simulated annealing
     gpv = extractTetraP(gp);
@@ -21,24 +24,27 @@ function gp = tetraCalRPAZTE(tc, gpp=[])
     n = 1;  % total number of optimizations attempted
     nTry = 0; % number of tries without improvement found
     maxTry = 7; % exit after this many failed tries
+    ec = struct('bed',gp.bedRMS,'print',gp.measRMS,'plate',gp.plateRMS); % keep err components for possible analysis
     while (nTry < maxTry)
         % initial guess for annealing checks, with random offset
         igp = randomOffset(gpv(iMin));
-        gpn = tetraRefineRPAZTE(tp,igp);
+        gpn = tetraRefineRPAZTE(tc,igp);
         n=n+1;
-        gpv(n) = extractTetraP(gpn);
+        ec(end+1) = struct('bed',gpn.bedRMS,'print',gpn.measRMS,'plate',gpn.plateRMS);
+        gpv(end+1) = extractTetraP(gpn);
         if (gpn.err < gpv(iMin).err)
-            gp=gpv(n)
-            iMin=n
+            gp=gpv(n);
+            iMin=n;
             nTry=0;
         else
-            nTry = nTry + 1
+            nTry = nTry + 1;
         end
     end
     
     % write out updates for klipper printer.cfg
     % make a config parameter structure containing only stuff to be updated:
     gp = gpv(iMin);
+    gp.RMS = ec(iMin);
     up.position_endstops = gp.position_endstops;
     up.delta_radius      = gp.delta_radius;
     up.delta_angles      = gp.delta_angles;
@@ -46,9 +52,17 @@ function gp = tetraCalRPAZTE(tc, gpp=[])
     up.tilt_radial       = gp.tilt_radial;
     up.tilt_tangential   = gp.tilt_tangential;
     tetraWriteUpdateCfg(up,'update.cfg');
+    % using "PROBE RESULTS" (no probe offset) instead of kilpper "Result: at"
+    % we no longer need:
+    %          ..., tc.bedMedian-tc.probe_offset(3), ...
+
+    remE = sprintf('# RMSE: bed=%.3f; plate=%.3f; meas=%.3f',...
+                gp.RMS.bed,gp.RMS.plate,gp.RMS.print);
+
     rem=sprintf('err=%.6f;  bedMed=%.3f;  stDev=%.3f; z0=%.3f',...
-                gp.err, tp.bedMedian-tp.probe_offset(3), ...
-                tp.bedStDev, tp.probe_offset(3));
+                gp.err, tc.bedMedian, ...
+                tc.bedStDev, tc.probe_offset(3));
+    system(['echo "',remE,'" >> update.cfg']); 
     system(['echo "# ',rem,'" >> update.cfg']); 
     system('cat update.cfg');
     gp.gpv = gpv;  % pass back everything, just in case
@@ -78,5 +92,8 @@ function p = extractTetraP(p0)
     p = randomOffset(p0.p,0);  % copy over RPAZTE
     p.err = p0.err;
     p.nEval = p0.nEval;
+    p.fitRMSE.bed = p0.bedRMS;
+    p.fitRMSE.plate = p0.plateRMS;
+    p.fitRMSE.printMeasurement = p0.measRMS;
 end
 

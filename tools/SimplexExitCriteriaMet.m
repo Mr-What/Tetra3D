@@ -7,6 +7,7 @@
 %    aaron birenboim, 11/2015
    
 function a = SimplexExitCriteriaMet(simplex,smallBox,nEvalSinceNewLow,errEps)
+global verboseFlags
 
 % exit when simplex can be bound within a smallBox, and
 % it has been several evaluations since we found a better low
@@ -32,11 +33,13 @@ simplex(:).y
 end
 if ((hiErr-loErr)/loErr < errEps)
     a=1;
-    disp('error pretty flat across simplex');
+    if verboseFlags.simplex > 0,
+        disp('error pretty flat across simplex');
+    end
     return;
 end
 
-% find boinding box of simplex
+% find bounding box of simplex
 lo = simplex(1).p;
 hi = simplex(1).p;
 for i=2:n;
@@ -48,4 +51,8 @@ for i=2:n;
 end
 box = hi - lo;
 a = (length(find(box > smallBox)) <=  0);
-if (a), disp('smallbox'); end
+if (a)
+    if verboseFlags.simplex > 0
+        disp('smallbox');
+    end
+end

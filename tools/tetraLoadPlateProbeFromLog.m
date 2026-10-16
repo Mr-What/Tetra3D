@@ -25,7 +25,8 @@ function pp = tetraLoadPlateProbeFromLog(logFile, plateScale=1)
     probe=load(ppCSV);
     timeAndIndex = probe(:,1:2);
     plateProbe = probe(:,3:5);  % strip time and cache index
-    for k=1:3, plateProbe(:,k) = plateProbe(:,k) + probe_offset(k); end
+    % Do NOT adjust for probe_offset.  No offset reported in DIMPLE lines
+    %for k=1:3, plateProbe(:,k) = plateProbe(:,k) + probe_offset(k); end
 
     % compute dimple vertex locations, and arrange all relevant data in struct
     pp = tetraCalProbe(plateProbe, plateScale);

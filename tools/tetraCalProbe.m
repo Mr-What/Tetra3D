@@ -22,56 +22,140 @@
 % and hard to use.
 function pd = tetraCalProbe(probe, plateScale=1, pattern=3)
     cluster = dbscan(probe,8,11);
+
+    % find estimated vertex and wall slope for all identified clusters
+    pd = clusterConeFits(probe,cluster);
+
+    % prune cluster lists in pd, containing only the "good" ones
+    pd = appendGoodConeFits(pd);
+    
+    
+    % re-compute with fixed dimple wall slope
+    [dimple,q] = fixedConeFits(pd.cluster,pd.dimpleSlope);
+    pd.dimple = dimple;
+    pd.q = q;
+
+    % ------------------------------ Store ideal dimple vertex locations
+    % ideal locations, for plates so far, will be every 20mm.
+    % We can guess ideal locations from probes adequately.
+    d0 = 20 * round(pd.dimple(:,1:2)/20);
+    d0 = plateScale * d0;  % initial printed plates had some shrinkage, plateScale ~< 1
+    pd.plateScale = plateScale;
+    pd.dimpleIdeal = d0;
+
+    % ------------------------------------- weights for measured dimples
+    [rot, x1, y1, w] = weightedRigidTransform2D(dimple, q, d0);
+    pd.plateRot = rot;
+    pd.plateShift = [x1,y1];
+    pd.w = w;
+
+    % set up a function which can rapidly compute MSE between best
+    % fit rigid transform from dimpleIdeal to a given set
+    % of measured or simulated points.
+    pd.fitMSE = tetraPlateFitErrFactory(d0,w);
+end
+
+% ------------------- estimate vertex and slope for all measurement clusters
+%   m0 -- designed dimple wall slope
+function pd = clusterConeFits(probe, cluster, m0=tand(15))
     pd.probe = probe;
     pd.clusterId=cluster;
     i = find(cluster < 0);
     pd.noCluster=probe(i,:);
     n = max(cluster);
     fprintf(1,'%d clusters, %d not-clustered\n',n,length(i));
-    pd.cluster = cell(n,1);
-    pd.dimple=zeros(n,3);
-    m = tand(15);  % default nipple wall slope
+
+    pd.clusterAll = cell(n,1);
+    pd.dimpleAll=zeros(n,3);
+    mv=[];  % fit slope, all clusters
+    qm={};  % fit quality, all clusters
     for k=1:n
         i = find(cluster==k);
         clusterSize = length(i);
         pk = probe(i,:);
-        pd.cluster(k) = pk;
-        if bitand(pattern,1)
-            % depricated.  initial probes are filtered out before writing probeNNNplate.csv
-            % omit points used for initial vertex estimate, they could over-weight cardinal direction fit
-            %disp('omitting initial rough search probes')
-            %disp(pk(1:4,:));
-            %pk = pk([5:clusterSize],:);
-            if bitand(pattern,2)
-                pMin = estimateConeFitFixed(pk,m);
-            else
-                [pMin,m] = estimateConeFit(pk,m);
-            end
-        else
-            disp('searching probes yet to be refactored');
-            %pMin = estimateConeFitSearch(pk);
-            %pMin = estimateConeFitSimple(pk);
-        end
-        %disp(round(1000*(pMin-pMin1)));
-        pd.dimple(k,:) = pMin;
-        tit = sprintf('cluster %d, %d probes, minima [%.3f, %.3f, %.3f]',k,clusterSize,pMin);
-        disp(tit);
-    end
+        pd.clusterAll{k} = pk;
 
-    % ideal locations, for plates so far, will be every 20mm.
-    % We can guess ideal locations from probes adequately.
-    d0 = 20 * round(pd.dimple(:,1:2)/20);
-    d0 = plateScale * d0;  % initial printed plates had some shrinkage, plateScale ~< 1
-    [rot,x1,y1] = estimateRotShift(d0,pd.dimple);
-    pd.plateScale=plateScale;
-    pd.plateRot=rot;
-    pd.plateShift = [x1,y1];
-    pd.dimpleIdeal = d0;
-    pd.dimpleShifted = applyRotShift(rot,x1,y1,d0);
+        % estimate dimple vertex and slope for all clusters
+        [pMin,m,qk] = coneFitGN(pk, m0, .3);
+
+        pd.dimpleAll(k,:) = pMin;
+        mv(k) = m;
+        qm{k} = qk;
+        
+        fprintf(1,'cluster %d, %d probes, vertex=[%.3f, %.3f, %.3f]; m=%.4f;',...
+                k,clusterSize,pMin,m);
+        fprintf(1,'  RMS=%.4f; diag_Cxy=[%.3g, %.3g];\n',...
+                qk.rms, qk.C(2,2), qk.C(3,3));
+    end
+    pd.mAll=mv;
+    pd.qAll=qm;
 end
 
-% ---------------------------- fit to ideal cone of known wall slope (m)
-%    150 deg v groove cutter, or emulated by 3D print, 15 deg slope
+% --------------------- prune cluster lists in pd, containing only the "good" ones
+function pd = appendGoodConeFits(pd)
+    n = rows(pd.dimpleAll);
+    %pd.ok = goodConeFits(pd);  % gate out bad fits here
+    pd.ok = [1:n]; pd.ok([3,5,9])=[]; % temp until we implement goodConeFits
+
+    pd.cluster = pd.clusterAll(pd.ok);
+    m = pd.mAll(pd.ok);
+    pd.mFit = m;
+    pd.dimpleSlope = median(m);
+    fprintf(1,'Estimated slope=%.4f; expected=%.4f;\n',pd.dimpleSlope,tand(15));
+end
+
+% --------------------------------- compute fits given dimple wall slope
+function [dimple,q] = fixedConeFits(cluster,m,rMin=.3)
+    n = length(cluster);
+    q=cell(n,1);
+    dimple = zeros(n,3);
+    for k=1:n
+        pk = cluster{k};
+        [pMin,qk] = coneFitFixedGN(pk, m, rMin);
+        dimple(k,:) = pMin;
+        %qk.sigxy = sqrt((qk.C(2,2) + qk.C(3,3))/2);
+        q{k} = qk;
+        
+        fprintf(1,'cluster %d, %d probes, vertex=[%.3f, %.3f, %.3f];',k,rows(pk),pMin);
+        fprintf(1,'  RMS=%.4f; diag_Cxy=[%.3g, %.3g];\n',...
+                qk.rms, qk.C(2,2), qk.C(3,3));
+    end
+end
+
+% ------------------------------------- weights for measured dimples
+function [rot, x1, y1, w, s0sq] = weightedRigidTransform2D(vMeasured, q, v0)
+%[rot,x1,y1] = estimateRotShift(d0,pd.dimple);
+    n = rows(v0);
+    %for k=1:n  % I'm not sure if I can extract vectors from fields cell arrays
+    %    C = q{k}.C;
+    %    rms = q{k}.rms;
+    %    ms(k) = rms*rms;
+    %    sigxy(k) = sqrt( (C(2,2) + C(3,3))/2 );
+    %end
+    sigxy = cellfun(@(s) sqrt((s.C(2,2) + s.C(3,3))/2), q);   % n x 1
+    sigxy(!isfinite(sigxy)) = 1;          % bad fit -> ~zero weight
+    s0min = 0.005^2;                      % keeps weights finite
+    w = ones(n,1)/n;
+    for it=1:9
+        xyMeas = vMeasured(:,1:2);
+        [rot,x1,y1] = rigidTransform2D(xyMeas, v0, w);
+        res  = xyMeas - applyRigidTransform2D(v0, rot, x1, y1);
+        v2   = sum(res(:).^2) / (2*n - 3);          % per-axis variance of plate residuals
+        s0sq = max(s0min, v2 - mean(sigxy.^2));
+        wPrev = w;
+        w = 1 ./ (sigxy.^2 + s0sq);
+        w = w / sum(w);
+        
+        d = w - wPrev;
+        d = sum(d .* d);
+        if (d < 1e-5)
+            break
+        end
+    end
+    [rot,x1,y1] = rigidTransform2D(xyMeas, v0, w);
+end
+
+% ---------------- best fit cone vertex, given assumed dimple wall slope
 function v = estimateConeFitFixed(pk, m=tand(15))
     global tetra
     tetra.callCount=0;
@@ -93,6 +177,77 @@ function v = estimateConeFitFixed(pk, m=tand(15))
         %plotFitCone(m,v,pk);
     end
 end
+
+% Gauss-Newton estimate for best fit cone, fixed slope
+% Set rmin to something reasonable, like .2mm to omit
+% probes near the estimated vertex in the solution
+function [v, q] = coneFitFixedGN(pk, m, rmin=-1, maxIter=33)
+    x = pk(:,1); y = pk(:,2); z = pk(:,3);
+    [~,i0] = min(z);
+    c = [x(i0), y(i0)];                     % same starting guess as before
+    for k = 1:maxIter
+        d = [x-c(1), y-c(2)];
+        r = sqrt(sum(d.^2,2));
+        if (rmin < 0)
+            %keep = true(size(r));
+            u = d ./ r;
+            u(r<.0000001,:)=0;  % handle divide by zero err
+            A = [ones(size(r,1),1), -m*u];
+            b = z - m*r;
+        else
+            keep = r > rmin;                    % direction undefined at the apex
+            u = d(keep,:) ./ r(keep);
+            A = [ones(nnz(keep),1), -m*u];
+            b = z(keep) - m*r(keep);
+        end
+        s = A \ b;                          % [z0, dx, dy]
+        c = c + s(2:3)';
+        if norm(s(2:3)) < 1e-6, break; end
+    end
+    z0  = s(1);
+    v   = [c, z0];
+    if nargout < 2, return; end
+    q.d=d;
+    q.b=b;
+    q.A=A;
+    res = b - A*s;
+    q.res=res;
+    q.rms = sqrt(mean(res .^ 2));
+    q.C   = (res'*res/(numel(b)-3)) * inv(A'*A);   % 3x3 covariance of [z0 dx dy]
+end
+
+% similar for free m
+function [v, m, q] = coneFitGN(pk, m0=tand(15), rmin=-1, rmax=12, maxIter=22)
+    x = pk(:,1);
+    y = pk(:,2);
+    z = pk(:,3);
+    [zMin,i0] = min(z);
+    c = [x(i0), y(i0)];
+    m = m0;
+    for k = 1:maxIter
+        d = [x-c(1), y-c(2)];
+        r = sqrt(sum(d.^2,2));
+        keep = (r > rmin) & (r < rmax);
+        rk = r(keep);
+        u  = d(keep,:) ./ max(rk, 1e-12);
+        A  = [ones(nnz(keep),1), -m*u, rk];
+        b  = z(keep) - m*rk;
+        s  = A \ b;                          % [z0, dx, dy, dm]
+        c  = c + s(2:3)';
+        m  = m + s(4);
+        if norm(s(2:3)) < 1e-5 && abs(s(4)) < 1e-6, break; end
+    end
+    v = [c, s(1)];
+    q.res = b - A*s;
+    q.rms = sqrt(mean((q.res .^ 2)));
+    q.C   = (q.res' * q.res / (numel(b)-4)) * inv(A'*A);   % 4x4 covariance [z0 dx dy dm]
+    cA = cond(A);
+    if cA > 1e3
+        warning('coneFitFreeGN: ill-conditioned (cond=%.0f), m poorly determined', cA);
+    end
+    q.sigxy = sqrt((q.C(2,2) + q.C(3,3))/2);
+end
+    
 function [v,m] = estimateConeFit(pk, m0=tand(15))
     global tetra
     tetra.callCount=0;
@@ -185,50 +340,6 @@ function plotFitConeR(m,v,p)
     hold off
     %disp('any key to continue...');kbhit();
     %keyboard
-end
-
-% ------------------------------------ find cal plate rotation and shift
-
-function [rot,x0,y0] = estimateRotShift(p0,p1)
-    global tetra
-    tetra.callCount=0;
-    tetra.callPeriod=5;
-    
-    initialStep = [1,1,1];
-    smallBox = initialStep/2000;
-    initialGuess = [0,0,0];
-    maxIterations=444;
-    dat.p0 = p0;  % set up struct with all data
-    dat.p1 = p1;
-    [fit,nEval,status,err] = SimplexMinimize(...
-        @(p) rotShiftErr(p,dat),...
-   	initialGuess, initialStep, smallBox, maxIterations);
-    rot = fit(1);
-    x0 = fit(2);
-    y0 = fit(3);
-end
-
-function err = rotShiftErr(p,dat)
-    global tetra
-    
-    rot = p(1);
-    x0 = p(2);
-    y0 = p(3);
-    p1 = applyRotShift(rot,x0,y0,dat.p0);
-    err = dat.p1(:,1:2) - p1;
-    err = err .* err;
-    err = mean(err(:,1) + err(:,2));
-    if (mod(tetra.callCount, tetra.callPeriod) == 0), ...
-        fprintf(2,'%d %.3f  %.3f  %.3f %.3f\n',tetra.callCount,err, rot,x0,y0); end
-    tetra.callCount = tetra.callCount + 1;
-end
-
-function p1 = applyRotShift(rot,x0,y0,p0)
-    c = cosd(rot);
-    s = sind(rot);
-    p1=p0;
-    p1(:,1) = p0(:,1) * c + p0(:,2) * s + x0;
-    p1(:,2) = p0(:,2) * c - p0(:,1) * s + y0;
 end
 
 % --------------------------- parabolic fit to probes used in search
