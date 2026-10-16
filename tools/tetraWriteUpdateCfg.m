@@ -1,7 +1,9 @@
 % given (part of) a klipper tilted_delta configuration parameter struct,
 % write a partial klipper printer.cfg type file, that contains all desired
 % updated entries
-function tetraWriteUpdateCfg(update, fNam)
+%    tetraWriteUpdateCfg(up,'updateRAZE.cfg',gp.err,gp.RMS,...
+%                        [tc.bedMedian, tc.bedStDev, tc.probe_offset);
+function tetraWriteUpdateCfg(update, fNam, err=[], rms=[], bedStats=[])
     fid = fopen(fNam,'w');
     if (fid <= 2)
         error('Could not open file "%s".',fNam);
@@ -33,6 +35,21 @@ function tetraWriteUpdateCfg(update, fNam)
     hdr = writeValueUpdate(fid,update,'arm_lengths'    ,hdr);
     hdr = writeValueUpdate(fid,update,'tilt_radial'    ,hdr);
     hdr = writeValueUpdate(fid,update,'tilt_tangential',hdr);
+    if !isempty(err) || !isempty(rms)
+        if isempty(err), err=NaN; end
+        if isempty(rms)
+            rmse=[NaN,NaN,NaN];
+        else
+            rmse=[rms.bed,rms.plate,rms.meas];
+        end
+        fprintf(fid,'# err=%.6f;  bed=%.3f; plate=%.3g; meas=%.3f;\n',...
+                err,rmse);
+    end
+
+    if(!isempty(bedStats))
+        fprintf(fid,'#   bedMed=%.3f;  stDev=%.3f; z0=%.3f\n',bedStats(1:3));
+    end
+    
     fclose(fid);
 end
 

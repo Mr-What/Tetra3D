@@ -35,7 +35,7 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
             %end
         end
         [mse,errXY,badXY] = tetraPlateErr(pp.k, pp.calPlate, gp.k);
-        tetra.plateMSE = mse;  % dirty hack to make available outside Simplex
+        tetra.plateRMS = sqrt(mse);  % dirty hack to make available outside Simplex
         %fprintf(2,'   meas_err=%4g',mse);
         err = err * mse;  % extra weight on plate probe, MSE, not RMS
     else

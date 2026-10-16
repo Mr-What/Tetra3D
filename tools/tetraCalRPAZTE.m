@@ -53,19 +53,8 @@ function gp = tetraCalRPAZTE(tc, gpp=[])
     up.arm_lengths       = gp.arm_lengths;
     up.tilt_radial       = gp.tilt_radial;
     up.tilt_tangential   = gp.tilt_tangential;
-    tetraWriteUpdateCfg(up,'update.cfg');
-    % using "PROBE RESULTS" (no probe offset) instead of kilpper "Result: at"
-    % we no longer need:
-    %          ..., tc.bedMedian-tc.probe_offset(3), ...
-
-    remE = sprintf('# RMSE: bed=%.3f; plate=%.3f; meas=%.3f',...
-                gp.RMS.bed,gp.RMS.plate,gp.RMS.print);
-
-    rem=sprintf('err=%.6f;  bedMed=%.3f;  stDev=%.3f; z0=%.3f',...
-                gp.err, tc.bedMedian, ...
-                tc.bedStDev, tc.probe_offset(3));
-    system(['echo "',remE,'" >> update.cfg']); 
-    system(['echo "# ',rem,'" >> update.cfg']); 
+    tetraWriteUpdateCfg(up,'update.cfg',gp.err,gp.RMS,...
+                       [tc.bedMedian,tc.bedStDev, tc.probe_offset(2)]);
     system('cat update.cfg');
     gp.gpv = gpv;  % pass back everything, just in case
     gp.gpcMin=iMin;

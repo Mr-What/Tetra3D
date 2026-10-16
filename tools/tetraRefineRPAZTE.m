@@ -41,6 +41,9 @@ function tp = tetraRefineRPAZTE(PP,IGP=[], ...
     tetra.bedRMS = 0;
     tetra.plateRMS = 0;
     tetra.measRMS = 0;
+
+    randDir=((rand(1,18)<.5) -.5)*2;
+    initialStep = initialStep .* randDir;
     
     initialGuess = [gp.p.delta_radius, ...
                     gp.p.delta_angles, ...
