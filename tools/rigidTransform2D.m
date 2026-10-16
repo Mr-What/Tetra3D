@@ -1,7 +1,7 @@
 % Kabsch/Procrustes solution  to a 2D rigid transformation (rotation + shift)
 % N: nominal plate positions (n x 2), M: measured vertices (n x 2), same row order
 % find theta, x0, y0 s.t. M ~= ([c -s; s c] * N' + [x0,y0])'
-function [theta,x0,y0,rms,fit] = rigidTransform2D(M,N,w=ones(rows(N),1))
+function [theta,x0,y0,q] = rigidTransform2D(M,N,w=ones(rows(N),1))
     w = w(:)/sum(w);
     nb = w' * N;    %mean(N,1);
     mb = w' * M;    %mean(M,1);
@@ -22,7 +22,7 @@ function [theta,x0,y0,rms,fit] = rigidTransform2D(M,N,w=ones(rows(N),1))
         return
     end
     q.fit = applyRigidTransform2D(N,theta,x0,y0);
-    res = M - fit;
+    res = M - q.fit;
     q.rms = sqrt(sum(w .* sum(res.^2,2))); % sqrt(mean(sum(res.^2,2)));
 end
 %P   = (R*N' + t)';                  % predicted machine positions

@@ -34,10 +34,10 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, pp, igp, fSetParams)
             %    tetra.echoMeas = false;
             %end
         end
-        [rms,errXY,badXY] = tetraPlateErr(pp.k, pp.calPlate, gp.k);
-        tetra.plateRMS = rms;  % dirty hack to make available outside Simplex
+        [mse,errXY,badXY] = tetraPlateErr(pp.k, pp.calPlate, gp.k);
+        tetra.plateMSE = mse;  % dirty hack to make available outside Simplex
         %fprintf(2,'   meas_err=%4g',mse);
-        err = err * rms*rms;  % extra weight on plate probe
+        err = err * mse;  % extra weight on plate probe, MSE, not RMS
     else
         errXY=1;
         badXY=0;
@@ -146,22 +146,33 @@ end
 % cheap, prototype calibration dimple plates may be warped.
 %
 % pk - parameters used for print
-% pm - measurements of print
+% pm - measurements of plate
 % gk - guess at better parameters to use for print.
 function [err, errXY, bad] = tetraPlateErr(pk, calPlate, gk)
-    % update tower positions for differences in stepper calibration, if any.
-    twr = commandedTowerPositions(pk, calPlate.pos, gk);
-    [gpos,bad,nBad] = tetra2cartV(twr,gk);
+% update tower positions for differences in stepper calibration, if any.
+    pos = calPlate.pos;
     idealVertices = calPlate.dimpleIdeal;
+    twr = commandedTowerPositions(pk, pos, gk);
+    [gpos,bad,nBad] = tetra2cartV(twr,gk);
+
+    % sorry, not processing bad pos a this time...
+    % hopefully we removed them in tetraAnalysePlateProbe culling
     if nBad > 0
-        fprintf(2,'removing %d non-physical vertices',nBad);
-        i = find(bad == 0);
-        gpos=gpos(i,:);
-        idealVertices = idealVertices(i,:);
+        %fprintf(2,'removing %d non-physical vertices',nBad);
+        fprintf(2,'%d non-physical vertices',nBad);
+        %i = find(bad == 0);
+        %gpos=gpos(i,:);
+        %idealVertices = idealVertices(i,:);
     end
+
+    % we can compute fit MSE, without actually finding fit, or measuring
+    err = calPlate.fitMSE(gpos(:,1), gpos(:,2));
+    errXY=[];
+    return
+    
     % find best fit rotation and shift of mounted plate to these readings.
     %[rot,x0,y0] = estimateRotShift(idealVertices,gpos,999);
-    [rot,x0,y0] = rigidTransform2D(gpos(:,1:2),idealVertices);
+    [rot,x0,y0,q] = rigidTransform2D(gpos(:,1:2),idealVertices, calPlate.w);
     %shiftedVertices = applyRotShift(rot,x0,y0,idealVertices);
     shiftedVertices = applyRigidTransform2D(idealVertices,rot,x0,y0);
     
@@ -170,25 +181,24 @@ function [err, errXY, bad] = tetraPlateErr(pk, calPlate, gk)
     errXY = gpos(:,1:2) - shiftedVertices(:,1:2);
     err = errXY .* errXY;
     err = sum(err,2);  %squared err
-    err = sqrt(mean(err)); %  RMS X,Y offset from likely dimple vertices to measured
+    err = mean(err); %  MSE X,Y offset from likely dimple vertices to measured
     if nBad > 0
         fprintf(2,'adjusting plate error for %d bad points.\n',nBad);
         err = mean(err(bad == 0)) * (nBad+1); %MSE
     end
 end
 
-function [gpos,bad,nBad] = tetra2cartV(twr,gp)
-    n = size(twr,1);
+function [gpos,bad,nBad] = tetra2cartV(tet,gk)
+    n = rows(tet);
     gpos = zeros(n,3);
-    errZ = zeros(n,1);
-    bad = int32(errZ);
-    for j=1:n
-        xyz = tetra2cart(gp, twr(j,:));  % guess at actual effector position
-        if !isreal(xyz)
-            bad(j) = 1;
+    bad = zeros(n,1);
+    for k=1:n
+        p = tetra2cart(gk,tet(k,:));
+        if !isreal(p)
+            bad(k)=1;
+            p = real(p);
         end
-        gpos(j,:) = real(xyz);
+        gpos(k,:) = p;
     end
     nBad = sum(bad);
 end
-

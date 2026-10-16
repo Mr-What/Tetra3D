@@ -29,7 +29,7 @@ function pp = tetraLoadPlateProbeFromLog(logFile, plateScale=1)
     %for k=1:3, plateProbe(:,k) = plateProbe(:,k) + probe_offset(k); end
 
     % compute dimple vertex locations, and arrange all relevant data in struct
-    pp = tetraCalProbe(plateProbe, plateScale);
+    pp = tetraAnalysePlateProbe(plateProbe, plateScale);
     pp.logFileName = logFile;
     pp.plateProbeFile = ppCSV;
     pp.p = p.p;

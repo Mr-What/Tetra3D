@@ -31,6 +31,8 @@ function gp = tetraCalRPAZTE(tc, gpp=[])
         gpn = tetraRefineRPAZTE(tc,igp);
         n=n+1;
         ec(end+1) = struct('bed',gpn.bedRMS,'print',gpn.measRMS,'plate',gpn.plateRMS);
+        fprintf(1,'err=%.6f ; bedRMS=%.3f;  plateRMS=%.6f;  measRMS=%.3f;\n',...
+                gpn.err, gpn.bedRMS, gpn.plateRMS, gpn.measRMS);
         gpv(end+1) = extractTetraP(gpn);
         if (gpn.err < gpv(iMin).err)
             gp=gpv(n);

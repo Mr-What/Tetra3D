@@ -20,7 +20,7 @@
 % for the dimple center by probing, since probes
 % near the bottom may be dominated by noise and slop,
 % and hard to use.
-function pd = tetraCalProbe(probe, plateScale=1, pattern=3)
+function pd = tetraAnalysePlateProbe(probe, plateScale=1, pattern=3)
     cluster = dbscan(probe,8,11);
 
     % find estimated vertex and wall slope for all identified clusters
@@ -95,7 +95,7 @@ end
 function pd = appendGoodConeFits(pd)
     n = rows(pd.dimpleAll);
     %pd.ok = goodConeFits(pd);  % gate out bad fits here
-    pd.ok = [1:n]; pd.ok([3,5,9])=[]; % temp until we implement goodConeFits
+    pd.ok = [1:n]; %pd.ok([3,5,9])=[]; % temp until we implement goodConeFits
 
     pd.cluster = pd.clusterAll(pd.ok);
     m = pd.mAll(pd.ok);

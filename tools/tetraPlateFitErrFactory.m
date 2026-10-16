@@ -8,5 +8,5 @@ function f = tetraPlateFitErrFactory(dimpleIdeal, w)
     wAx = w .* A(:,1);
     wAy = w .* A(:,2);
     Saa = w' * sum(A.^2, 2);
-    f   = @(Mx, My) rigidCostXY(Mx, My, w, wAx, wAy, Saa);
+    f   = @(Mx, My) tetraPlateFitErr(Mx, My, w, wAx, wAy, Saa);
 end
