@@ -18,7 +18,8 @@ function [pm,idx] = mergePoints(p,neigh=1)
             qc(nc,:) = pj(1:2);
             idx(j)=nc;
         else
-            idx(j) = m;  % m should always have one element.  crash here means a bug
+            disp([j,m(:)']);
+            idx(j) = m(1);
         end
     end
 

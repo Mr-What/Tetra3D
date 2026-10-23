@@ -53,7 +53,7 @@ function apex=getTetraCoords0(baseLen,twrLen)
   y1 = (rB2-rC2+yC2+xB*(2*x1-xB))/(2*yC);
   z1 = rC2 - x1*x1 - ((y1-yC)^2);
   if z1 < 0
-      disp('non-physical apex');
+      disp('ERROR: non-physical apex');
       z1
       keyboard
   end

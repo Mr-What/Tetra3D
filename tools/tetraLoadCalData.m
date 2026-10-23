@@ -1,8 +1,8 @@
 % retrieve bed probe data and reduce
 % implement standard procedure to load cal data
-function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog=[], plateScale=1)
+function tp = tetraLoadCalData(logFile, plateProbe=[], measFile=[], measFileIdeal=[])
     global tetra
-    logFile = sprintf(tetra.logFileFmt,n)
+    %logFile = sprintf(tetra.logFileFmt,n)
     tetraGetLogFile(logFile);
     [tp,cfg] = loadCalData(logFile, measFile, measFileIdeal);
     tp.logFileName=logFile;
@@ -10,6 +10,7 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
     tp.measFileIdeal = measFileIdeal;
     probeFile = [logFile(1:end-4),'.csv']
     if exist(probeFile, 'file') != 2
+        % this one gets PROBE RESULTS lines, which have offset removed
         cmd=sprintf('%s/tetraExtractProbeResults.sh "%s" > "%s"',...
                     tetra.toolPath, logFile, probeFile)
         system(cmd)
@@ -35,9 +36,11 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
     fprintf(1,'bed z stats: [median, mean, SD] = [ %.3f , %.3f , %.4f ]\n',...
             tp.bedMedian, tp.bedMean, tp.bedStDev);
 
-    if !isempty(plateProbeLog)
-        tetraGetLogFile(plateProbeLog);  % make sure plate probe log is available
-        tp.calPlate = tetraLoadPlateProbeFromLog(plateProbeLog,plateScale);
+    if !isempty(plateProbe)
+        %   tetraGetLogFile(plateProbeLog);  % make sure plate probe log is available
+        %    tp.calPlate = tetraLoadPlateProbeFromLog(plateProbeLog,plateScale);
+        % plate probes might start getting more metadata.  load them elsewhere.
+        tp.calPlate = plateProbe;
     end
     
     if bitand(tetra.plotFlags,1)
@@ -49,7 +52,7 @@ function tp = tetraLoadCalData(n=0, measFile=[], measFileIdeal=[], plateProbeLog
         plot3(ps(:,1),ps(:,2),ps(:,3),'rd-');
         legend('estimate','samples');
         zlabel(sprintf('offset=%.3f',z0));
-        title(sprintf('probe%03d',n));
+        title(logFile);
         hold off;
         if isfield(tp,'calPlate')
             p = tp.calPlate.probe;  % raw probes of calibration plate

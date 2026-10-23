@@ -32,16 +32,22 @@
 %
 function tp=tetraGetParams(p0)
     if isfield(p0,"delta_radius")  % each tower, at base
-        tp.p = p0;  % parameters in "interface" form
+        tp.p = tetraExtractCfgParams(p0);
         tp.k = tetraKineticParams(p0);
     elseif isfield(p0,"printer")  % this must be from loadKlipperCfg.m
         tp = tetraGetParams(cfg2tetraDef(p0));
+    elseif isfield(p0,'p')
+        tp.p = tetraExtractCfgParams(p0.p);
+        tp.k = tetraKineticParams(tp.p);
     else
         tp.k = p0;
         tp.p = tetraDefinitionParams(p0);
     end
+    if norm(tp.p.position_endstops) > norm([490,490,490])
+        keyboard
+    end
 end
-
+                             
 function kp = tetraKineticParams(p)
     kp.base = [ [-1,-1,0] ; [1,-1,0]; [0,0,1] ];
     kp.dir = [[0,0,1];[0,0,1];[0,0,1]];
@@ -73,7 +79,7 @@ function p = tetraDefinitionParams(k)
     p.delta_angles = [210,330,90];
     p.tilt_radial = [0,0,0];
     p.tilt_tangential = [0,0,0];
-    p.position_endstops = [1,1,1] * 500;
+    p.position_endstops = k.endstop;
     p.rotation_distances = [1,1,1] * 40;
     kp.base = [ [-1,-1,0] ; [1,-1,0]; [0,0,1] ];
     kp.dir = [[0,0,1],[0,0,1],[0,0,1]];

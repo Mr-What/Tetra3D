@@ -6,13 +6,17 @@
 %  using this.
 function pp = tetraLoadPlateProbeFromLog(logFile, plateScale=1)
     global tetra
+
+    % if reduced calibration plate probe log file was not present,
+    % assume they want most recent probe in klipper log,
+    % and download it to given filename
+    tetraGetLogFile(logFile);
+    
     cfg = klipLoadCfg(logFile);  % either printer.cfg or klippy.log
     p = tetraGetParams(cfg);
 
-    % log contains probe offset.  Remove it.
-    % we need to know actual servo locations.
-    % we will compute error as difference from expected
-    % probe trigger point (not z=0 but z=z_offset)
+    % current tetra macros remove probe_offset from probe report lines.
+    % but make sure we retain it, in case we need it.
     probe_offset =  [cfg.probe.x_offset, cfg.probe.y_offset, cfg.probe.z_offset];
     fprintf(1,'probe_offset=[%f,%f,%.3f]\n',probe_offset);
 
@@ -31,6 +35,7 @@ function pp = tetraLoadPlateProbeFromLog(logFile, plateScale=1)
     % compute dimple vertex locations, and arrange all relevant data in struct
     pp = tetraAnalysePlateProbe(plateProbe, plateScale);
     pp.logFileName = logFile;
+    pp.cfg = cfg;
     pp.plateProbeFile = ppCSV;
     pp.p = p.p;
     pd = appendTowerPositions(pp.p, pp.dimple);

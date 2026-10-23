@@ -16,20 +16,20 @@ function p = klipPlotProbes(probe,desc='Bed')
     %out = isnan(zo);
     %z(out) = griddata(p(:,1), p(:,2), p(:,3), Xi(out), Yi(out), 'nearest');  % sets outside to nearest neighbor
     z=round(z*1000);  % convert to microns
-    zMax = max(p(:,3)) * 1000
-    zMin = min(p(:,3)) * 1000
+    zMax = max(p(:,3)) * 1000;
+    zMin = min(p(:,3)) * 1000;
     %dz = round((zMax-zMin)/2);
     cz = (zMax+zMin)/2;  % make cz a round number
     cz = 100 * round(cz/100);
-    dz = max(abs([zMin,zMax]-cz));
+    dz = max(abs([zMin,zMax]-cz))
     z(isnan(zo)) = round(dz/67.5);  % 0 displayed as color slightly below 0?!??
 
-    centerWhite
+    centerWhite();
     hold off
     [c0,h0]=contourf(Xi,Yi,z-cz,65,'LineColor','none');
     %imagesc(z)
     axis equal % image;
-    levels = roundLevels(dz);
+    levels = roundLevels(dz)
     caxis([-dz,dz]);
     grid on;
     hold on;
@@ -38,10 +38,11 @@ function p = klipPlotProbes(probe,desc='Bed')
     %           'backgroundcolor','w',...
     %       'edgecolor','none',
     %      'margin',2);
-    colorbar
+    colorbar;
     xlabel('X(mm)');
     ylabel('Y(mm)');
-    title(sprintf('%s probes (offset=%d microns)',desc,cz));
+    tit = sprintf('%s probes (offset=%d microns)',desc,cz)
+    title(tit);
 
     for k=1:rows(p)
         plot(p(k,1),p(k,2),'mo');

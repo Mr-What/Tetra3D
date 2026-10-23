@@ -8,9 +8,15 @@
 % return : pos adjusted for mis-match in stepper parameters
 %              non-physical location, but real, if there is an error
 function tet = commandedTowerPositions(pk, pos, gk)
-    de = pk.endstop - gk.endstop;
+    if isstruct(pk)
+        de = pk.endstop - gk.endstop;
+        scaleMatch = sum(abs(pk.mmPerRot - gk.mmPerRot)) < 0.000001;
+    else
+        % allow callers to pass endstops instead of whole param struct
+        de = pk - gk.endstop;  % allow callers to pass endstops instead of whole param struct
+        scaleMatch=true;
+    end
     endstopsMatch = sum(abs(de)) < 0.00001;
-    scaleMatch =    sum(abs(pk.mmPerRot - gk.mmPerRot)) < 0.000001;
     if scaleMatch
         if endstopsMatch
             tet = pos;  % matching stepper calibration, no change
