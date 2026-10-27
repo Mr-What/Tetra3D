@@ -1,28 +1,25 @@
 # returns XY[n,2] in an ordered probe pattern
 
-function xy = radialProbePattern()
+function xy = radialProbePattern(phase=[0,30,60], r=[15,30,45,60])
     xy = zeros(999,2);
-    r = 20;
     n = 1;
-    r = 20;
-    for (a=[30:60:355])  % delta cardinal directions
-        n=n+1;
-        xy(n,:) = round(r*[cosd(a),sind(a)]);
-    end
-    r=40;
-    for (a=[0:60:355])
-        n=n+1;
-        xy(n,:) = round(r*[cosd(a),sind(a)]);
-    end
-    r=60;
-    for (a=[15:30:355])
-        n=n+1;
-        xy(n,:) = round(r*[cosd(a),sind(a)]);
-    end
-    r=80;  % don't want too much weight at outside.  12 samples again
-    for (a=[0:30:355])
-        n=n+1;
-        xy(n,:) = round(r*[cosd(a),sind(a)]);
+    for ang = phase
+        for a=[ang:60:355+ang]
+            n=n+1;
+            xy(n,:) = round(r(1)*[cosd(a),sind(a)]);
+        end
+        for (a=[ang:60:355+ang])
+            n=n+1;
+            xy(n,:) = round(r(2)*[cosd(a),sind(a)]);
+        end
+        for (a=[ang+15:30:355+ang+15])
+            n=n+1;
+            xy(n,:) = round(r(3)*[cosd(a),sind(a)]);
+        end
+        for (a=[ang:30:355+ang])
+            n=n+1;
+            xy(n,:) = round(r(4)*[cosd(a),sind(a)]);
+        end
     end
     xy = int32(xy(1:n,:));
 end

@@ -199,8 +199,8 @@ def merge(printer_lines, update_sections, section_order):
 
                 if update_entry is not None:
                     # Emit the replacement lines
-                    # comment out replaced line (ab multi-line not supported) :
-                    output.append(f"# {raw}\t# {timestamp}")
+                    # comment out replaced line (ab multi-line not supported)
+                    output.append(f"# {raw.rstrip()}\t {timestamp}\n")
 
                     for ul in update_entry:
                         output.append(ul + '\n')

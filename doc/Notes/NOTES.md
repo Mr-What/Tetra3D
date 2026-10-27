@@ -525,4 +525,49 @@ plate probe111, using param update from 108.
 Pretty good looking results, but print
 measurements still not great.
 
-Looking into weighted estimates.Fr
+Got weighted rigid trasform coded.
+
+### 261020
+
+Having trouble on cal, using plate.
+I have gotten a result where the bed probes as tipped,
+usually about -0.2mm to 1.5mm, tipped up towards tower A.
+
+I re-did the bed probe using parameters from last reasoable cal from probe 128.
+
+![bed probe 131](./radialBed131.png)
+
+After a bed-only on 131 probes, AE then ZTE,
+I got some reasonable parameters.
+Bed probe 132 was slightly better, but not significant.
+
+However, after some confusion, I did probe 133 with
+same parameters, and got that nasty tilt up towards tower A.
+
+Not sure what is happening.
+
+Changed belt tensioner on tower A, although I don't think
+that is the likely culprit.
+
+Repeat probe for 134, but I expect some issues, especially
+with endstop A, which has been worked on.
+
+### 261025
+
+Messing with calibrating new shorter arms.
+Wrote unified calibration procedure.
+
+### 261027
+
+measured envelope.
+
+![envelope above](./envelopeXY.png)
+Plotted 70mm radius circle on bed.
+Red lines are where even with no pose limitations,
+those points could not be reached.
+Black is limit arm pose to outside of 11.5 degrees from tower
+or it's radial perpendiculat; and no more than 37 degrees to the side.
+The sideways freedom of the Heim joints is very limited.
+![envelope](./envelopeA.png)
+You will note that the envelope gets "pinched" as you get
+farther from the bed, and the towers are getting closer.

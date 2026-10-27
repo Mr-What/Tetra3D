@@ -18,7 +18,7 @@ function [pm,idx] = mergePoints(p,neigh=1)
             qc(nc,:) = pj(1:2);
             idx(j)=nc;
         else
-            disp([j,m(:)']);
+            %disp([j,m(:)']);
             idx(j) = m(1);
         end
     end

@@ -32,7 +32,7 @@
 %   gp0 -- configuration parameter initial guess (td.p type struct)
 %   maxTry -- repeat optimizing from random offsets near current bset,
 %             until we have had maxTry unsuccesful attempts at improvement
-function gp = tetraCal(id, td, gp0=[], maxTry=2)
+function gp = tetraCal(id, td, gp0=[], maxTry=2, randomRefine=true)
     global tetra
 
     figure(2);
@@ -57,18 +57,29 @@ function gp = tetraCal(id, td, gp0=[], maxTry=2)
     n = 1;  % total number of optimizations attempted
     nTry = 0; % number of tries without improvement found
     while (nTry < maxTry)
-        % initial guess for annealing checks, with random offset
-        igp = tetraVoffset(cal,gpv(iMin));
+        igp = gpv(iMin);  % initial guess for next refinement attempt
+        if randomRefine
+            % initial guess for annealing checks, with random offset
+            igp = tetraVoffset(cal,igp);
+        end
         gpn = tetraRefine(cal,td,igp);
 
         n=n+1
         gpv(end+1) = reduceParams(gpn);
         fprintf(1,'err=%.6f ; bedRMS=%.3f;  plateRMS=%.6f;  measRMS=%.3f;\n',...
                 gpn.err, gpn.RMS.bed, gpn.RMS.plate, gpn.RMS.meas);
-        if (gpn.err < gpv(iMin).err)
+        relErr = (gpn.err - gpv(iMin).err) / gpn.err
+        if relErr < 0
             gp=gpv(n);
             iMin=n;
-            nTry=0;
+            if relErr < -0.0001
+                % this is a better reduction that likely from round-off,
+                % so reset the try counter for exit condition from here
+                nTry=0;
+            else
+                % negligible reduction, count it as "no improvement"
+                nTry = nTry + 1;
+            end
         else
             nTry = nTry + 1;
         end
@@ -136,10 +147,11 @@ end
 function cal_id_usage(id)
     global tetra
     disp(['Calibration type "',id,'" not yet supported.']);
-    fn = fieldnames(tetra.cal);
-    n = length(fn);
+    fn = fieldnames(tetra.cal)
+    n = length(fn)
     for k=1:n
-        printCalInfo(tetra.cal.(fn(k)),2);
+        nam=fn{k};
+        printCalInfo(tetra.cal.(nam),2);
     end
 end
 

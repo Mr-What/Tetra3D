@@ -61,7 +61,8 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
     end
 
     err = err*1000;  % scale to be easier to read    
-    if (mod(tetra.callCount,tetra.callPeriod) == 0)
+    if (mod(tetra.callCount,tetra.callPeriod) == 0) || ...
+            (tetra.callCount == length(p)+1)  % this should be the initial guess
         %fprintf(2,'\n');
         fprintf(1,'%4d %.6g  ',tetra.callCount, err);
         fprintf(1,' %.5g',p);

@@ -21,7 +21,7 @@ function p = klipPlotProbes(probe,desc='Bed')
     %dz = round((zMax-zMin)/2);
     cz = (zMax+zMin)/2;  % make cz a round number
     cz = 100 * round(cz/100);
-    dz = max(abs([zMin,zMax]-cz))
+    dz = max(abs([zMin,zMax]-cz));
     z(isnan(zo)) = round(dz/67.5);  % 0 displayed as color slightly below 0?!??
 
     centerWhite();
@@ -29,7 +29,7 @@ function p = klipPlotProbes(probe,desc='Bed')
     [c0,h0]=contourf(Xi,Yi,z-cz,65,'LineColor','none');
     %imagesc(z)
     axis equal % image;
-    levels = roundLevels(dz)
+    levels = roundLevels(dz);
     caxis([-dz,dz]);
     grid on;
     hold on;

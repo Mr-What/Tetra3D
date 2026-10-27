@@ -26,12 +26,11 @@ function tp = tetraRefine(cal,td,IGP=[])
     % ----- initial data plot
     %figure(2); [c,ax,pFit] = plotInitialProbe(td.probe);
     if isempty(IGP)
-        gp = tetraGetParams(PP.p);
+        gp = tetraGetParams(td.p);
     else
         gp = tetraGetParams(IGP);
     end
     gp.verbose = 0;
-    gp.p.position_endstops
     
     % reset global storage for return of error components
     tetra.RMS.bed = 1;
@@ -39,10 +38,11 @@ function tp = tetraRefine(cal,td,IGP=[])
     tetra.RMS.meas = 1;
 
     initialGuess = tetraVget(cal,gp.p);
-    randDir=rand(1,length(initialGuess));
-    randDir(randDir<.5) = -1;
-    randDir(randDir>.4) = 1;
-    initialStep = cal.initialStep .* randDir;
+    % in SimplexMinimize, the signs of the elements of initialStep get randomized.
+    % repeated calls to tetraRefine with the same parameters can and will
+    % get randomized results.
+    % if they vary significantly, you have local minima issues.
+    initialStep = cal.initialStep;
     smallBox = cal.smallBox;
     maxIterations=4000;
 

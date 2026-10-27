@@ -1,6 +1,6 @@
 % initialize tetra tool path and default values for tetra global
 global tetra
-tetra.home = '~/Tetrahedral3Dprinter/Tetra3D';
+tetra = struct('home','~/Tetrahedral3Dprinter/Tetra3D');
 tetra.toolPath = [tetra.home, '/tools'];
 %addpath(tetra.toolPath);  % done in .octaverc to find this file!
 addpath([tetra.toolPath, '/test']); % test scripts
@@ -29,6 +29,10 @@ tetra.RMS = struct('bed',0,'plate',0,'meas',0);
 global verboseFlags
 verboseFlags.simplex=1;
 
+% cosine of angle that is too close to the tower, or the perpendicular of the tower
+% cosine of angle that is too close to the tangential direction for pivot hardware.
+tetra.envelope=struct('tooClose',.98,'tooSideways',.6);
+
 % ============
 %tn=fieldnames(tetra);
 %for k=1:length(tn), fprintf(1,'tetra.%s=',tn{k}); disp(tetra.(tn{k})); end
@@ -39,30 +43,50 @@ verboseFlags.simplex=1;
 tetra.cfgFields = {'delta_radius','delta_angles','arm_lengths',...
                    'tilt_radial','tilt_tangential','position_endstops', ...
                    'rotation_distances'};
+clear id
 
-id.id = 'RPAZTE';  % full calibration
-id.fields = tetra.cfgFields;
+% always check endstops, so I'll remove E from IDs.  Redundant.
+
+id.id = 'RPAZT';  % full calibration
+id.fields = tetra.cfgFields(1:6);
 id.scalar=[];
 id.initialStep = [3,3,3, 2,2,2, 3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
 id.smallBox = [2,2,2, 2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
 id.callPeriod = 50;
 tetra.cal.(id.id) = id;
 
-id.id = 'R1E';
+id.id = 'RZT';  
+id.fields = tetra.cfgFields([1,4:6]);
+id.initialStep = [3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
+id.smallBox = [2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
+tetra.cal.(id.id) = id;
+
+id.id = 'AZT';
+id.fields = tetra.cfgFields(3:6);
+id.initialStep = [3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
+id.smallBox = [2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
+tetra.cal.(id.id) = id;
+
+id.id = 'A1ZT';
+id.scalar = 1;
+id.initialStep = [3,  2,2,2,  2,2,2, 2,2,2]/10;
+id.smallBox = [2, 1,1,1, 1,1,1, 2,2,2]/10000;
+tetra.cal.(id.id) = id;
+
+id.id = 'R1';
 id.fields = tetra.cfgFields([1,6]);
-id.scalar=[1]; % first field, delta_radius is scalar
 id.initialStep = [1,1,1,1];
 id.smallBox = [1,1,1,1] * 0.0003;
 id.callPeriod = 10;
 tetra.cal.(id.id) = id;
 
-id.id = 'RE';
+id.id = 'R';
 id.initialStep = [1,1,1,1,1,1];
 id.smallBox = [1,1,1,1,1,1] * 0.0003;
 id.scalar=[];
 tetra.cal.(id.id) = id;
 
-id.id = 'RA1ZTE';
+id.id = 'RA1ZT';
 id.fields = tetra.cfgFields([1,3:6]);
 id.scalar=[2]; % second field, arm_lengths is scalar
 id.initialStep = [4,4,4, 2,  2,2,2,  2,2,2, 2,2,2]/10;
@@ -70,13 +94,22 @@ id.smallBox = ones(1,13)/2000;
 id.callPeriod = 50;
 tetra.cal.(id.id) = id;
 
-id.id = 'RAZTE';
+% this should only be used when RZT and AZT are not quite converging
+% or oscillation.  Mostly for refinement without annealing,
+%   e.g.    gp = tetraCal('RAZT',td,igp,3,false)
+id.id = 'RAZT';
 id.scalar=[];
-id.initialStep = [4,4,4, 2,2,2,  2,2,2,  2,2,2, 2,2,2]/10;
-id.smallBox = ones(1,15)/2000;
-id.callPeriod = 100;
+id.initialStep = [4,4,4, 2,2,2,  2,2,2,  2,2,2, 2,2,2]/30;
+id.smallBox = ones(1,15)/5000;
+id.callPeriod = 50;
 tetra.cal.(id.id) = id;
 
+id.id = 'E';
+id.fields = tetra.cfgFields(6);
+id.scalar=[];
+id.initialStep = [4,4,4]/10;
+id.smallBox = ones(1,3)/2000;
+id.callPeriod = 20;
+tetra.cal.(id.id) = id;
 
-
-
+clear id
