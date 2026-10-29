@@ -13,6 +13,12 @@ function tetraPlotEnvelope(env,aa,za,psym='o-')
         plot3(x,y,z,psym);
         if zk==1, hold on; end
     end
+    for k=1:na
+        r = env(k,:);
+        x = r * cosd(a(k));
+        y = r * sind(a(k));
+        plot3(x,y,za,psym);
+    end
     axis equal
     grid on
     hold off

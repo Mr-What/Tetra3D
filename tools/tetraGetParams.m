@@ -70,6 +70,11 @@ function kp = tetraKineticParams(p)
         zh = sqrt(1 - sz*sz - st*st);
         kp.dir(n,:) = sind(z) * rHat + sind(t) * tHat + [0,0,zh];
     end
+    % get full basis set for "tower coordinates".
+    % Cache these for use in region of support (envelope) checks
+    [tt,tr] = tetraTowerCoords(kp.dir);
+    kp.towerRadial = tr;
+    kp.towerTangential = tt;
 end
 
         
@@ -108,4 +113,32 @@ function p = cfg2tetraDef(cfg)
           cfg.stepper_c.rotation_distance];
     p.position_endstops = s(:)';
     p.rotation_distances = r(:)';
+end
+
+% Tower coords  X - tower up direction (k.dir)
+%               Y - cross(Z,x) = tangential direction
+%               Z - radial direction
+function [tangential, radial] = tetraTowerCoords(dir)
+    radial=zeros(3);
+    tangential=zeros(3);
+    for k=1:3
+        up = dir(k,:);
+        xy = up(1:2);
+        xyn = norm(xy);
+        xy = xy / xyn;
+        dz = up(3);
+        rHat = [xy * dz, -xyn];
+        radial(k,:) = rHat;
+        tHat = cross(rHat,up);
+        tangential(k,:) = tHat;
+
+        % check, should be all zeros
+        err = [norm(up)-1,norm(tHat)-1,norm(rHat)-1;...
+               dot(up,tHat),dot(up,rHat),dot(rHat,tHat)];
+        if sum(abs(err(:))) > 1e-8
+            dbstack
+            fprintf(2,'Orthonormal check failed, tower %d\n',k)'
+            keyboard
+        end
+    end
 end

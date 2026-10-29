@@ -18,7 +18,7 @@ function q = tetraOutsideEnvelope(pk,xyz)
         q=4;  % outisde PHYSICAL envelope
         return
     end
-    fprintf(1,'[%d, %d, %d] at tower pos [%d, %d, %d]\n',round(xyz),round(abc));
+    %fprintf(1,'[%d, %d, %d] at tower pos [%d, %d, %d]\n',round(xyz),round(abc));
 
     tooClose = tetra.envelope.tooClose;  % usually high, like 0.98
     tooSideways = tetra.envelope.tooSideways; % usually around .4 to .7, asin is degrees from radial
@@ -36,7 +36,7 @@ function q = tetraOutsideEnvelope(pk,xyz)
         deHat = de / deLen;
 
         % effector position relative to carriage, in tower coords
-        drtBase = [-pk.dir(k,:);pk.radial(k,:);pk.tangential(k,:)];
+        drtBase = [-pk.dir(k,:);pk.towerRadial(k,:);pk.towerTangential(k,:)];
         drt = drtBase * deHat';
             
         %disp(drt');
@@ -52,17 +52,17 @@ function q = tetraOutsideEnvelope(pk,xyz)
 
         % raidial direction, perp to tower, pointing toward centerline
         if drt(2) > tooClose
-            fprintf(2,'[%d,%d,%d] nearly perpendicular to tower %d\n',round(xyz),k);
+            %fprintf(2,'[%d,%d,%d] nearly perpendicular to tower %d\n',round(xyz),k);
             q = 8+k;  % too close to perpendicular to tower
             return
         end
         if abs(drt(1)) > tooClose
-            fprintf(2,'[%d,%d,%d] too close to tower %d\n',round(xyz),k);
+            %fprintf(2,'[%d,%d,%d] too close to tower %d\n',round(xyz),k);
             q = 16+k; % too close to tower
             return
         end
         if abs(drt(3)) > tooSideways
-            fprintf(2,'[%d,%d,%d] too far sideways from tower %d\n',round(xyz),k);
+            %fprintf(2,'[%d,%d,%d] too far sideways from tower %d\n',round(xyz),k);
             q= 32+k;
             return
         end

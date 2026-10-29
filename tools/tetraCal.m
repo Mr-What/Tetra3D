@@ -15,7 +15,7 @@
 %      cp = tetraLoadPlateProbeFromLog('probe138.log'); % Cal plate Parameters
 %
 %      % load data from a bed probe, and attach associated calibration plate probe
-%      td = loadCalData('probe136.log',cp);  % (full) Tetra cal Data
+%      td = tetraLoadCalData('probe136.log',cp);  % (full) Tetra cal Data
 %
 %      gp = tetraCal('RPAZTE', td, gp0=[], maxTry=2);  % guess parameters
 %
@@ -23,7 +23,7 @@
 % WARNING: if you do not have plate probes, do not try
 %         to calibrate delta_radius and arm_lengths simultaneously.
 %
-%            depricated --> tetraLoadCalData(33,measFile='calMeas033.m')
+%            depricated --> tetraLoadCalData(33,[],measFile='calMeas033.m')
 %  gp0 -- initial guess at tetra parameters, tc.p is default
 %  maxTry -- check with random guesses near minima this many times before retaining best minima
 % This calibration MUST have XY measurements

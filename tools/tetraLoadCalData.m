@@ -4,7 +4,7 @@ function tp = tetraLoadCalData(logFile, plateProbe=[], measFile=[], measFileIdea
     global tetra
     %logFile = sprintf(tetra.logFileFmt,n)
     tetraGetLogFile(logFile);
-    [tp,cfg] = loadCalData(logFile, measFile, measFileIdeal);
+    [tp,cfg] = tetraLoadCal(logFile, measFile, measFileIdeal);
     tp.logFileName=logFile;
     tp.measFile = measFile;
     tp.measFileIdeal = measFileIdeal;

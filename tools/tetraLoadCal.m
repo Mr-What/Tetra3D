@@ -1,13 +1,13 @@
 % load probe, and optionally measured calibration print data
 % into a structure, and return.
-function [tp,cfg] = loadCalData(logFile, measFile=[], measFileIdeal=[])
-    if ischar(logFile)
+function [tp,cfg] = tetraLoadCal(bedProbeLog, measFile=[], measFileIdeal=[])
+    if ischar(bedProbeLog)
         % load parameters as echoed from printer.cfg,
         % and load bed-probe results from klippy.log
-        [tp0,cfg] = loadProbeDataFromKlipperLog(logFile);
+        [tp0,cfg] = loadProbeDataFromKlipperLog(bedProbeLog);
     else
         disp('logFile already loaded. using tetra data cache.');
-        tp = logFile;
+        tp = bedProbeLog;
         cfg=[];
         return
     end
