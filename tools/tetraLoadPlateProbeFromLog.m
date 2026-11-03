@@ -4,7 +4,7 @@
 %  Use tail_plippy_log.py to extract last printer configuration
 %  data and last bed probe from a long klippy.log before
 %  using this.
-function pp = tetraLoadPlateProbeFromLog(logFile, plateScale=1)
+function pp = tetraLoadPlateProbeFromLog(logFile, pattern=[], plateScale=1)
     global tetra
 
     % if reduced calibration plate probe log file was not present,
@@ -33,7 +33,7 @@ function pp = tetraLoadPlateProbeFromLog(logFile, plateScale=1)
     %for k=1:3, plateProbe(:,k) = plateProbe(:,k) + probe_offset(k); end
 
     % compute dimple vertex locations, and arrange all relevant data in struct
-    pp = tetraAnalysePlateProbe(plateProbe, plateScale);
+    pp = tetraAnalysePlateProbe(plateProbe, pattern, plateScale);
     pp.logFileName = logFile;
     pp.cfg = cfg;
     pp.plateProbeFile = ppCSV;
