@@ -20,7 +20,7 @@
 % for the dimple center by probing, since probes
 % near the bottom may be dominated by noise and slop,
 % and hard to use.
-function pd = tetraAnalysePlateProbe(probe, plateScale=1, pattern=3)
+function pd = tetraAnalysePlateProbe(probe, pattern=[], plateScale=1, patternCode=3)
     cluster = dbscan(probe,8,11);
 
     % find estimated vertex and wall slope for all identified clusters
@@ -38,7 +38,11 @@ function pd = tetraAnalysePlateProbe(probe, plateScale=1, pattern=3)
     % ------------------------------ Store ideal dimple vertex locations
     % ideal locations, for plates so far, will be every 20mm.
     % We can guess ideal locations from probes adequately.
-    d0 = 20 * round(pd.dimple(:,1:2)/20);
+    if isempty(pattern)
+        d0 = 20 * round(pd.dimple(:,1:2)/20);
+    else
+        d0 = pattern;
+    end
     d0 = plateScale * d0;  % initial printed plates had some shrinkage, plateScale ~< 1
     pd.plateScale = plateScale;
     pd.dimpleIdeal = d0;

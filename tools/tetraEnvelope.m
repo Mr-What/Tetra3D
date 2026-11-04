@@ -20,6 +20,7 @@
 %  physical limit, location is beyond arm length limit
 %  practical limit : an arm is at too severe an angle
 function [practical, physical, code, pk] = tetraEnvelope(pp,aa=[0:5:359],za=[0:5:200])
+    global tetra
     na = length(aa);
     nz = length(za);
     physical = zeros(na,nz);
@@ -29,7 +30,7 @@ function [practical, physical, code, pk] = tetraEnvelope(pp,aa=[0:5:359],za=[0:5
     pk = p.k;
     r = mean(pp.delta_radius)/2;
     r1=r;
-    disp('#r     angle    tower    reason');
+    if bitand(tetra.plotFlags,4), disp('#r     angle    tower    reason'); end
     for zi=1:nz
         z = za(zi);
         for ai=1:na
@@ -41,7 +42,9 @@ function [practical, physical, code, pk] = tetraEnvelope(pp,aa=[0:5:359],za=[0:5
             practical(ai,zi) = r1;
             code(ai,zi)=q;
             [codeName,twr] = tetraEnvelopeCode(q);
-            fprintf(1,'%d %d %s %s\n',round(r1),round(a),twr,codeName);
+            if bitand(tetra.plotFlags,4)
+                fprintf(1,'%d %d %s %s\n',round(r1),round(a),twr,codeName);
+            end
         end
     end
 end

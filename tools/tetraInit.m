@@ -31,13 +31,10 @@ verboseFlags.simplex=1;
 
 % cosine of angle that is too close to the tower, or the perpendicular of the tower
 % cosine of angle that is too close to the tangential direction for pivot hardware.
-tetra.envelope=struct('tooClose',.98,'tooSideways',.6);
+% current heim joints swing about 17.5 deg sideways at best, cos(90-17.5)=.3
+tetra.envelope=struct('tooClose',.98,'tooSideways',.3);
 
-% ============
-%tn=fieldnames(tetra);
-%for k=1:length(tn), fprintf(1,'tetra.%s=',tn{k}); disp(tetra.(tn{k})); end
-%clear k tn
-
+suppress_verbose_help_message(true);  % turn off help help at the bottom of help messages
 
 % ------------------------------- calibration settings
 tetra.cfgFields = {'delta_radius','delta_angles','arm_lengths',...

@@ -21,7 +21,11 @@ function q = tetraOutsideEnvelope(pk,xyz)
     %fprintf(1,'[%d, %d, %d] at tower pos [%d, %d, %d]\n',round(xyz),round(abc));
 
     tooClose = tetra.envelope.tooClose;  % usually high, like 0.98
-    tooSideways = tetra.envelope.tooSideways; % usually around .4 to .7, asin is degrees from radial
+    % current prototype only swings about 15 degrees sideways. cos(75) ~= .26
+    % a more free Heim joint might swing 30 degrees, cos(60) = .5
+    % hence, typical value might be between about .25 and .5
+    tooSideways = tetra.envelope.tooSideways; % usually around .3 to .5
+
     for k=1:3
         xyzc = pk.base(k,:) + abc(k) * pk.dir(k,:); % carriage position
         de = xyz - xyzc; % from carriage to effector

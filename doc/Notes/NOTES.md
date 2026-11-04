@@ -1,6 +1,8 @@
 # Tilted Delta Development Notes
 [Calibration Log](https://docs.google.com/spreadsheets/d/1F8SSiFC5vxzJGwmjgO5lJFe-6YIsopfEGAam5U8VZzw/edit?usp=sharing "Calibration Log")
 
+![Tetrahedral 3D printer](./tetrahedral3Dprinter.jpg "Initial prototype, circa Jluy 2026")
+
 ## Added tilted_delta kinematics to klipper
 Initial build had a switch mounted on effector, which could
 be considered to be a zero offset bed probe.
@@ -11,7 +13,7 @@ I am maintaining a [branch of klipper](https://github.com/Mr-What/klipper/tree/t
 ## COTS effector trial
 
 Initial build was using a COTS effector
-![Image](./RostockHotEnd.jpg "COTS Rostock/Kossel toolhead")
+![COTS effector](./RostockHotEnd.jpg "COTS Rostock/Kossel toolhead")
 where the hot end was mounted with a hinge, and pre-loaded with a spring.
 This was not repeatable enough to use for a bed probe.
 
@@ -336,63 +338,12 @@ This may have been the cause of changing results for a long time.
 Tightened up, and re-calibrating like new, unknown printer at probe78.
 Printed cal print and probe080.
 
-### 0917
+### 260917
 
-## Recommended calibration procedure
-
-  1. check and update probe offset
-  2. ```FIRMWARE_RESTART```, then run bed probe, ```radialBedProbe.gcode```
-  3. copy results to ```octave``` machine,
-  ```
-       > tp = getCalData();
-  ```
-  4. calibrate ```delta_radius``` with the same value for each tower, and endstops.
-  ```
-       > gp = calRE(tp);
-  ```
-  5. update ```printer.cfg``` on RPi host:
-  ```
-       update_klipper_cfg.py printer.cfg updateRE.cfg
-  ```
-  6. This is all the calibration that was typically done by hand on old delta printers.
-  Check your bed levels with another bed probe, or compute the bed mesh with:
-  ```
-       HOME
-       BED_MESH_CALIBRATE PROFILE=RE
-       SAVE_CONFIG
-  ```
-  7. I prefer to do the calibration prints without the bed compensation, which will have a residual error in the calibration computations.
-     If you need the compensation to print, you can try
-  ```
-     > gp = calAE(tp,gp.p);
-     > gp = calR3E(tp,gp.p);
-  ```
-   Update those parameters, using the endstop positions from the last calibration computation.
-
-  8. print the calibration print, ```deltaCalPrint60.gcode```, which is sliced from ```Drawings/deltaCalPrint.scad```.
-  9. Measure the calibration print.  Alter the 
-     ```Tetra3D/tools/test/deltaMeasTemplate10_60.m``` file.
-     The first two letters should match the measured hexes.
-     The ```i``` suffix is for the distance between interior edges of the hex pair.
-     The ```o``` suffix is for the outside edge distance.
-     
-  10. Run another bed probe, using the same configuration that was used for the cal print.
-  11. Load that data with the measured data:
-  ```
-      > tp = getCalData(1,'myMeasurements.m');
-  ```
-
-  12. Run the full calibration:
-  ```
-       > gp = calRPAZTE(tp);
-  ```
-  
-  13. Update ``printer.cfg``` with these results.
-      Delete any previous bed meshes in printer.cfg.
-      They are no longer valid after calibration parameters have changed.
-      
-  14. Check with another bed mesh, or probe script.
-      I usually find that if the probed level is mostly within [-0.1,0.1] that is good enough to print, and don't worry about a bed mesh correction.
+wrote a summary of my calibration process.
+This one worked well with a full calibration,
+but that is not dependable.
+suggest series of parameter subset cals instead.
 
 After re-calibration, bed mesh is:
 ![bed mesh 82](./probe82.png)
@@ -571,3 +522,25 @@ The sideways freedom of the Heim joints is very limited.
 ![envelope](./envelopeA.png)
 You will note that the envelope gets "pinched" as you get
 farther from the bed, and the towers are getting closer.
+
+From the computed envelopes, I'm getting a max
+radius of 110 for the 290mm arms,
+and 70 for the 238mm arms.
+Given current frame, optimal arms for largest
+bed level envelope is 281mm, max bed radius 112.6mm.
+
+For my nominal design, the maximum circular envelope on the bed
+as a function of arm length is 112.6 with 281mm arms:
+![radius at bed](./printArea.svg "circular envelope at bed vs. arm length")
+My 290mm arms are close enough, but the traxxas ends may be
+a source of slop or backlash.
+The longest arms I have with heim joints are 238,
+which I am using now.
+Some minor improvement, but not a lot, at the
+cost of a significant reduction of print area at the bed, 70mm vs 110mm.
+
+###261029
+
+For comparison, on a delta with the same tower base locations,
+the optimal arm length is 284mm, with a circular print envelope radius 113.4mm.
+![delta radius](./deltaPrintRadius.svg  "delta print envelope for towers with same delta_radius")

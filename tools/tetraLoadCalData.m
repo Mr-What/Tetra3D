@@ -1,5 +1,12 @@
-% retrieve bed probe data and reduce
-% implement standard procedure to load cal data
+% function tp = tetraLoadCalData(logFile, plateProbe=[], measFile=[], measFileIdeal=[])
+%
+%    Load bed probe data from a klipper log file
+%    process data into fields for calibration
+%
+% Pass plateProbe=tetraLoadPlateProbe(...) to include plate probe data.
+%
+%         Use of a measured print, measFile and measFileIdeal,
+%         are depricated for calibration plate probe.
 function tp = tetraLoadCalData(logFile, plateProbe=[], measFile=[], measFileIdeal=[])
     global tetra
     %logFile = sprintf(tetra.logFileFmt,n)

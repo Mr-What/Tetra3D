@@ -14,9 +14,9 @@ in klipper as the
 
 ### Configure parameters
 
-talk about new, unique ```[printer]``` parameters:
+talk about new, unique ```[printer]``` parameters:\
+   ~~delta_angles: 210, 330, 90~~ # do not refine
 ```
-   delta_angles: 210, 330, 90
    delta_radius: 167, 167 , 167
    arm_lengths: 286, 286 , 286
    tilt_radial:    13, 13, 13
@@ -43,37 +43,103 @@ guess radius
 
 measure and guess endstops
 
-load calibration data
+load tetra calibration data, td:
+<!--  discuss this after initial cal: 
+ octave> tp = tetraLoadPlateProbe('plateProbe141.log',...
+         >      17*hexGrid(3), 101.2/102); % optional params -->
 ```
-   octave> tc = tetraLoadCalData(n);  % tetra calibration data
+    octave> td = tetraLoadCalData('bedProbe142.log');
 ```
-The calibration integer id, n, will default to zero if not
-provided.
-This sequence number is used for derived calibration data files.
-The path to and/or name if these klipper log files is set
-in ```tetra.logFileFmt```emacs 
-
-
-
 
 ### get parameters close enough to print
 
-Usually just ```tetraCalRE```
+Usually just 
+```
+    octave> gp = tetraCal('R1',td);
+```
 
 test with targetPattern.gcode and/or gridPattern.gcode.
 edit gcode as necessary for your setup.
 
 ### print and measure calibration pattern
 
-someday, probe plate?
+Run a bed mesh if necessary so that you can do some
+basic printing.
 
-sequence of reduced parameter refinements.
+Print a hex outline to help you place the calibration
+plate near the desired location and orientation.
+You will usually want a radius 1-3 mm wider than
+your calibration plate to leave room for calibration
+errors in a not fully calibrated printer.\
+Klipper Console:
+```
+    SET_PATTERN_SCALE SCALE=70 ; radius(to corner) of desired hex
+```
+Then run ```hex_outline.gcode```
 
-update.  run calibration again, including print.
-You should be close enough to do full, all-parameter, calibration.
+#### Run plate probe script:
 
-Print test patterns without bed mesh.
-They should be good.
+Glue or clamp your calibration plate to the print bed,
+as centered as possible within the hex outline.
 
-re-probe to check.
+Edit your plate probe script, like ```probePlateC.gcode```
+for the spacing on your calibration plate.
+find the line :
+```
+     DIMPLE_PROBE_SET SCALE=20
+```
+and change it to match the spacing between dimples on
+your 37 dimples in hex pattern plate.\
+...or...  remove that line and enter the above by
+and at the klipper/mainsail console before running
+a plate probe script that does **not** set the spacing,
+like you did for the hex outline, but with the 
+```DIMPLE_PROBE_SET SCALE=17``` command.
 
+#### load full calibration data
+
+You may want to re-run a bed probe with the same
+parameters used for the plate probe, if they have changed.
+
+Load all calibration data:
+```
+    octave> tp = tetraLoadPlateProbe('plateProbe141.log',...
+          >      17*hexGrid(3), 101.2/102); % optional params
+
+    octave> td = tetraLoadCalData('bedProbe142.log',tp);
+```
+
+### Full calibration
+
+You may want to do some basic refinements to your
+parameters before attempting a full calibration.\
+Recommended octave procedure:
+```
+    > gp = tetraCal('R1',td); % best scalar radius
+    
+    % seed with previous fit, but find best scalar arm length
+    > gp = tetraCal('A1',td,gp);
+    
+    % refine independent radii, and tower tilt
+    > gp = tetraCal('RZT',td,gp);
+    
+    % refine independent arm length, and tower tilt
+    > gp = tetraCal('AZT',td,gp);
+```
+You may want to repeat the last two refinements until
+they converge.
+
+You are likely to find a closer fit to measurements
+by running a ```RAZT``` full calibration.
+I often get an overfit from this full calibration,
+which may give me lower fit error, but it yields
+a non-physical parameter set which may not be 
+a good interpolant/extrapolant over the whole
+print envelope.
+
+#### check your calibration
+
+Run another bed probe.
+If many probes are more than 0.1mm from zero,
+you may want to repeat the above calibration procedure,
+but start with your current, refined, parameter set.

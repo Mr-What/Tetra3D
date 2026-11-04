@@ -1,10 +1,23 @@
+%function pp = tetraLoadPlateProbe(logFile, pattern=[], plateScale=1)
+%
 %  Load klipper parameters, and calibration plate probe data
 %  from a klipper.log
 %
-%  Use tail_plippy_log.py to extract last printer configuration
-%  data and last bed probe from a long klippy.log before
-%  using this.
-function pp = tetraLoadPlateProbeFromLog(logFile, pattern=[], plateScale=1)
+%  Supply ideal calibration plate probe locations, pattern,
+%  if the plate is not a regular square grid, 20mm spacing.
+%  Most common is a hex grid, like:
+%       %Define a hex grid, "radius" 3, 18mm apart on center:
+%       pattern = 18*hexGrid(3);
+%
+%  Scale ideal probe pattern by plateScale.
+%  Useful for things like printed calibration plates, which may have
+%  some shrinkage.  My printed test plated were at scale 101.3/102,
+%  from 17*hexGrid(3);  Slight shrinkage.
+%
+%  An attempt will be made to download last section of klipper.log
+%  file using tailLog.sh.  Edit your copy of tailLog.sh to reflect
+%  your network/klipper setup.
+function pp = tetraLoadPlateProbe(logFile, pattern=[], plateScale=1)
     global tetra
 
     % if reduced calibration plate probe log file was not present,
