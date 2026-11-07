@@ -57,7 +57,7 @@ function tp = tetraLoadCalData(logFile, plateProbe=[], measFile=[], measFileIdea
             figure 2;
             tetraPlotPlateProbe(tp.calPlate.probe,  ... % all probes
                                 tp.calPlate.dimple, ... % estimated dimple vertices
-                                tp.calPlate.probeFile);
+                                tp.calPlate.logFileName);
             figure 1
         end
     end

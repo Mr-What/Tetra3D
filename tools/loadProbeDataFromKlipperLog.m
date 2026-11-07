@@ -45,6 +45,6 @@ function [tp,cfg] = loadProbeDataFromKlipperLog(logFile)
     end
 
     % compute tower positions for all tests points, and store in tp struct
-    tp = appendTowerPositions(p.p, probe);
+    tp = appendTowerPositions(p.cfg, probe);
     tp.probe_offset = probe_offset;
 end

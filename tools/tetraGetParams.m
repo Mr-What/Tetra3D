@@ -5,7 +5,7 @@
 % Tower B is in the  x,-y quadrant (front right)
 % Tower C is near the x=0 axis     (rear)
 %
-% For interface, we define :
+% For interface (.cfg), we define :
 %          delta_radius  (mm)
 %          delta_angles (usually [210,330,90])
 %          arm_lengths
@@ -14,10 +14,12 @@
 %          position_endstops (distance from z=0 plane to location of arm axis at endstop)
 %          rotation_distance (how many mm movement/rotation)
 %
-% for kinematics, we convert these to:
+% for kinematics (.kin), we convert these to:
 %    base[3,3] -- base locations, Z's should be 0
 %    dir[3,3]  -- tower travel direction, [0,0,1] for perfect linear delta.
 %    arm_lengths[3]    -- length of arm from carriage to effector, same as interface
+%    towerRadial[3,3]       -- basis vector pointing from tower towards center
+%    towerTangential[3,3]   -- basis vector pointing from tower sideways
 %
 % Since there are fewer parameters, we optimize on the "human" parameters,
 % but compute forward and reverse kinematics with the kinematic params.
@@ -32,18 +34,18 @@
 %
 function tp=tetraGetParams(p0)
     if isfield(p0,"delta_radius")  % each tower, at base
-        tp.p = tetraExtractCfgParams(p0);
-        tp.k = tetraKineticParams(p0);
+        tp.cfg = tetraExtractCfgParams(p0);
+        tp.kin = tetraKineticParams(p0);
     elseif isfield(p0,"printer")  % this must be from loadKlipperCfg.m
         tp = tetraGetParams(cfg2tetraDef(p0));
-    elseif isfield(p0,'p')
-        tp.p = tetraExtractCfgParams(p0.p);
-        tp.k = tetraKineticParams(tp.p);
+    elseif isfield(p0,'cfg')
+        tp.cfg = tetraExtractCfgParams(p0.cfg);  % remove any diagnostics or data
+        tp.kin = tetraKineticParams(tp.cfg);
     else
-        tp.k = p0;
-        tp.p = tetraDefinitionParams(p0);
+        tp.kin = p0;
+        tp.cfg = tetraDefinitionParams(p0);
     end
-    if norm(tp.p.position_endstops) > norm([490,490,490])
+    if norm(tp.cfg.position_endstops) > norm([490,490,490])
         keyboard
     end
 end

@@ -17,10 +17,10 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
 
     % probe_offset not in kinetic parameters.
     % copy it there for error computatuion
-    td.k.probe_offset = td.probe_offset;
+    td.kin.probe_offset = td.probe_offset;
 
     gp = tetraVset(cal,p,igp); % convert p vector int standard .p parameter struct
-    [err,errZ,badZ] = tetraProbeErr(td.k, td.pos, gp.k);
+    [err,errZ,badZ] = tetraProbeErr(td.kin, td.pos, gp.kin);
     tetra.RMS.bed = err;  % dirty hack to make available outside Simplex
 
     %fprintf(2,'probe_err=%.4g',err);
@@ -29,7 +29,7 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
         if (tetra.callCount <= 1)
             disp('Using calibration plate measurements.');
         end
-        [mse,errXY,badXY] = tetraPlateErr(td.k, td.calPlate, gp.k);
+        [mse,errXY,badXY] = tetraPlateErr(td.kin, td.calPlate, gp.kin);
         tetra.RMS.plate = sqrt(mse);  % dirty hack to make available outside Simplex
         %fprintf(2,'   meas_err=%4g',mse);
         err = err * mse;  % extra weight on plate probe, MSE, not RMS
@@ -50,7 +50,7 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
                 tetra.echoMeas = false;
             end
         end
-        [rms,errXY,badXY] = tetraPrintErr(td.k, td.measXY, gp.k);
+        [rms,errXY,badXY] = tetraPrintErr(td.kin, td.measXY, gp.kin);
         %fprintf(2,'   meas_err=%4g',mse);
         tetra.RMS.meas=rms;
         err = err * rms * rms;  % extra weight on print

@@ -22,7 +22,7 @@ function tp = appendTowerPositions(PP,probe, measXYdat, measCmd)
     pos = zeros(m,3);
     n=1;
     for j=1:m
-        p = cart2tetra(tp.k,probe(j,:));
+        p = cart2tetra(tp.kin,probe(j,:));
         if isreal(p)
             probe(n,:) = probe(j,:);
             pos(n,:) = p;
@@ -62,12 +62,12 @@ function tp = appendTowerPositions(PP,probe, measXYdat, measCmd)
             contuinue;  % no defn for measurement ID
         end
         p = measCmd.(pid);
-        p1 = cart2tetra(tp.k,[p(1,:),0]);
+        p1 = cart2tetra(tp.kin,[p(1,:),0]);
         if !isreal(p1)
             fprintf(2,'[%.3f, %.3f, 0] outside envelope.  ignored.\n');
             continue;  % bad measurement point
         end
-        p2 = cart2tetra(tp.k,[p(2,:),0]);
+        p2 = cart2tetra(tp.kin,[p(2,:),0]);
         if !isreal(p2)
             fprintf(2,'[%.3f, %.3f, 0] outside envelope.  ignored.\n');
             continue;  % bad measurement point

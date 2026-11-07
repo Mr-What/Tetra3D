@@ -85,12 +85,12 @@ function gp = tetraCal(id, td, gp0=[], maxTry=2, randomRefine=true)
 
         f = tetra.plotFlags;
         tetra.plotFlags = 7;
-        [pe,peXY,peBad] = tetraPlateErr(td.k,td.calPlate,gpn.k);
+        [pe,peXY,peBad] = tetraPlateErr(td.kin,td.calPlate,gpn.kin);
         tetra.plotFlags=f;
         figure 2
         tit = [td.logFileName, '   plate:',td.calPlate.plateProbeFile]
         %klipPlotProbes(pp.probe,pp.logFileName);
-        tetraPlotBedFitErr(td.probe, td.pos,td.p.position_endstops,gpn);
+        tetraPlotBedFitErr(td.probe, td.pos,td.cfg.position_endstops,gpn);
         xlabel(sprintf('%d) X(mm)',n));
         figure 1
     end
@@ -123,7 +123,7 @@ end
 
 % select the params we need to search on, and metadata
 function gp = reduceParams(p)
-    gp = tetraExtractCfgParams(p.p);
+    gp = tetraExtractCfgParams(p.cfg);  % clean off extra diagnostic fields
     gp.err = p.err;
     gp.RMS = p.RMS;
 end

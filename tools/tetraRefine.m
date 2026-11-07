@@ -10,7 +10,7 @@
 %             loaded by loadAsStruct(fileName.m)
 %
 %    [IGP] -- Configuation parameters, for the initial guess.
-%             Default is same as PP.p, but in some cases, where
+%             Default is same as PP.cfg, but in some cases, where
 %             partial optimizations are performed in sequence from
 %             a single set of probe data, some of the parameters
 %             used in this optimization may not be the same as ones
@@ -26,7 +26,7 @@ function tp = tetraRefine(cal,td,IGP=[])
     % ----- initial data plot
     %figure(2); [c,ax,pFit] = plotInitialProbe(td.probe);
     if isempty(IGP)
-        gp = tetraGetParams(td.p);
+        gp = tetraGetParams(td.cfg);
     else
         gp = tetraGetParams(IGP);
     end
@@ -37,7 +37,7 @@ function tp = tetraRefine(cal,td,IGP=[])
     tetra.RMS.plate = 1;
     tetra.RMS.meas = 1;
 
-    initialGuess = tetraVget(cal,gp.p);
+    initialGuess = tetraVget(cal,gp.cfg);
     % in SimplexMinimize, the signs of the elements of initialStep get randomized.
     % repeated calls to tetraRefine with the same parameters can and will
     % get randomized results.
@@ -47,17 +47,17 @@ function tp = tetraRefine(cal,td,IGP=[])
     maxIterations=4000;
 
     [fit,nEval,status,err] = SimplexMinimize(...
-        @(p) tetraFitErr(p,cal,td,gp.p),...
+        @(p) tetraFitErr(p,cal,td,gp.cfg),...
    	initialGuess, initialStep, smallBox, maxIterations);
         %@(p) tetraFitErr(p,td,gp,@setTetraRPAZTE),...
 
     % return refined tetra (tilted) parameter set
-    tp = tetraVset(cal,fit,gp.p);
+    tp = tetraVset(cal,fit,gp.cfg);
     tp = tetraAppendErrorMetrics(tp,err);
     tp.nEval = nEval;
 
     % plot parameter fit, retrieve full parameter vector(s)
-    [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,cal,td,gp.p);%,@setTetraRPAZTE);
+    [err,errZ,badZ,errXY,badXY] = tetraFitErr(fit,cal,td,gp.cfg);%,@setTetraRPAZTE);
     %pf = PP.probe;  pf(:,3) = pf(:,3) + errZ;
     %plot3(pf(:,1),pf(:,2),pf(:,3),'ro');
     %legend('Parabolic Fit to measurements','Measured','Delta Fit Points');

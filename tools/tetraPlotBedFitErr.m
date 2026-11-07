@@ -3,11 +3,11 @@
 % and parameter struct for estimated parameters
 function [err,fitXYZ] = tetraPlotBedFitErr(xyz,tet,endstops,gp);
     if !isfield(gp,'delta_radius')
-        gk = gp.k;
+        gk = gp.kin;
     else
         % compute kinetic parameters
-        gp = tetraGetParams(gp.p);
-        gk=gp.k;
+        gp = tetraGetParams(gp.cfg);
+        gk=gp.kin;
     end
     fitXYZ = tetra2cartV(tet,gk,endstops);
     err = fitXYZ-xyz;

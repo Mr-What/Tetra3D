@@ -50,8 +50,8 @@ function pp = tetraLoadPlateProbe(logFile, pattern=[], plateScale=1)
     pp.logFileName = logFile;
     pp.cfg = cfg;
     pp.plateProbeFile = ppCSV;
-    pp.p = p.p;
-    pd = appendTowerPositions(pp.p, pp.dimple);
+    pp.cfg = p.cfg;
+    pd = appendTowerPositions(pp.cfg, pp.dimple);
     pp.pos = pd.pos;
     pp.probe_offset = probe_offset;
 end
