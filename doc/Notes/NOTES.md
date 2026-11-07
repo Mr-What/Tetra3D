@@ -544,3 +544,15 @@ cost of a significant reduction of print area at the bed, 70mm vs 110mm.
 For comparison, on a delta with the same tower base locations,
 the optimal arm length is 284mm, with a circular print envelope radius 113.4mm.
 ![delta radius](./deltaPrintRadius.svg  "delta print envelope for towers with same delta_radius")
+
+### 261105
+
+Wrote tetraPlotPlateFit.m.
+Found that best fit scale to plate was 100.62/102.
+However, since we are trying to calibrate scale
+on printer, we should not use this in calibration.
+Stick with measured 101.3/102.
+
+plate 141 with bed 143 had very similar answers
+for both AZT and RZT.
+Check if RA improves scale?

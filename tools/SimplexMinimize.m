@@ -2,10 +2,10 @@
 % Based off of Wikipedia article, circa 2015
 
 function [fit,nEval,status,err] = SimplexMinimize(fcn,...
-                                                  initialGuess,initialStep,smallBox,maxIter,errEps)
+                     initialGuess,initialStep,smallBox,...
+                     maxIter=1000,errEps=0.00001)
+
 global verboseFlags 
-if (nargin < 5), maxIter = 1000; end
-if (nargin < 6), errEps  = .00001; end
 
 status = 0;  % Normal completion
 nDim = prod(size(initialGuess));

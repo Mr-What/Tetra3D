@@ -1,10 +1,16 @@
+; Make sure this matches the dimple spacing on your plate:
+
+DIMPLE_PROBE_SET SCALE=17  ; mm between dimple centers
+
+M118 did you set scale? e.g.   DIMPLE_PROBE_SET SCALE=17
+M118 did you HOME?
+
 ;SET_GCODE_VARIABLE MACRO=_CROSS_PROBE_STATE VARIABLE=stop VALUE=0.3
 ;SET_GCODE_VARIABLE MACRO=_CROSS_PROBE_STATE VARIABLE=initial_step VALUE=2
 ; minimize travel between probes.  z offset more likely to stay above plate
 ;HOME
 TLOG PREFIX="DIMPLE" MSG="starting probe for plate C"
 G0 Z12 F3000
-DIMPLE_PROBE_SET SCALE=17  ; mm between dimple centers
 DIMPLE_PROBE_SCALED DX=0    DY=0
 DIMPLE_PROBE_SCALED DX=1    DY=0
 DIMPLE_PROBE_SCALED DX=0.5  DY=0.866

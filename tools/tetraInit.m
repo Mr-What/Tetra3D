@@ -44,12 +44,18 @@ clear id
 
 % always check endstops, so I'll remove E from IDs.  Redundant.
 
-id.id = 'RPAZT';  % full calibration
+id.id = 'RPAZT';  % full calibration (not recommended)
 id.fields = tetra.cfgFields(1:6);
 id.scalar=[];
 id.initialStep = [3,3,3, 2,2,2, 3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
 id.smallBox = [2,2,2, 2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
 id.callPeriod = 50;
+tetra.cal.(id.id) = id;
+
+id.id = 'RA';
+id.fields = tetra.cfgFields([1,3,6]);
+id.initialStep = [2,2,2, 1,1,1, 2,2,2];
+id.smallBox = id.initialStep / 10000;
 tetra.cal.(id.id) = id;
 
 id.id = 'RZT';  

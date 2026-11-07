@@ -1,5 +1,8 @@
-% make a pretty contour plot from irregular sampled bed probe values
-%     for calibration plates, you may want to add a prefix like desc='Dimple' or desc='Cal Plate A'
+%function p = klipPlotProbes(probe,desc='Bed')
+%   make a pretty contour plot from irregular sampled bed probe values
+%
+%   for calibration plates, you may want to add a prefix like
+%   'Dimple' or 'Cal Plate A' for desc
 function p = klipPlotProbes(probe,desc='Bed')
 
     p = mergePoints(probe);  % replace similar measurements with median

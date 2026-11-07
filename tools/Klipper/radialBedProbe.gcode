@@ -1,5 +1,5 @@
 ; Generic.  Edit SET_PATTERN_SCALE command as needed
-; 37 point hex grid goes out to radius=3.  Set SCAKE to 1/3 desired radius
+; 37 point hex grid goes out to radius=3.  Set SCALE to 1/3 desired radius
 SET_PATTERN_SCALE SCALE=23 ; envelope around 78mm for 271mm arms
 
 HOME

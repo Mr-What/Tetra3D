@@ -31,6 +31,9 @@ function [err, errXY, bad] = tetraPlateErr(pk, calPlate, gk)
     if bitand(tetra.plotFlags,4)
         [errCheck,errXY] = rigidTransformErr(gpos(:,1:2),idealVertices, calPlate.w);
         disp([err,errCheck]);
+        q = tetraPlotPlateFit(gpos(:,1:2),idealVertices,calPlate.w,100);
+        pause(1);  % let plotting display
+        csvwrite('dimpleEst.csv',gpos(:,1:2));
     end
 
     if nBad > 0
@@ -52,7 +55,7 @@ function [err,errXY] = rigidTransformErr(gpos,iv,w)
     % toolhead position from guessed parameters, minus
     %    likely location after estimated plate mounting rot, shift
     errXY = gpos - sv;
-    if bitand(tetra.plotFlags,4);
+    if false % bitand(tetra.plotFlags,4);
         plotXformErr(gpos,iv,sv);
         %keyboard
         pause(1);

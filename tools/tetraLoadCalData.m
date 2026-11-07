@@ -51,28 +51,48 @@ function tp = tetraLoadCalData(logFile, plateProbe=[], measFile=[], measFileIdea
     end
     
     if bitand(tetra.plotFlags,1)
-        figure 1; hold off;
-        p=tp.probe;ps=tp.probeSamples;z0=tp.probe_offset(3);
-        plot3(p(:,1),p(:,2),p(:,3)-z0,'o-');
-        view(0,90);
-        xlabel X;ylabel Y;grid on; hold on;
-        plot3(ps(:,1),ps(:,2),ps(:,3),'rd-');
-        legend('estimate','samples');
-        zlabel(sprintf('offset=%.3f',z0));
-        title(logFile);
-        hold off;
+        figure 1;
+        tetraPlotBedProbe(tp.probe, tp.probeSamples, tp.probe_offset(3), logFile);
         if isfield(tp,'calPlate')
-            p = tp.calPlate.probe;  % raw probes of calibration plate
-            d = tp.calPlate.dimple; % estimated dimple bottoms
-            figure 2; hold off;
-            plot3(p(:,1),p(:,2),p(:,3),'o');
-            grid on;hold on;xlabel X;ylabel Y;
-            view(0,90);
-            plot3(d(:,1),d(:,2),d(:,3),'rx');
-            legend('plate probes','dimple vertex');
-            title(['Cal Plate probes ',tp.calPlate.plateProbeFile]);
-            hold off
+            figure 2;
+            tetraPlotPlateProbe(tp.calPlate.probe,  ... % all probes
+                                tp.calPlate.dimple, ... % estimated dimple vertices
+                                tp.calPlate.probeFile);
             figure 1
         end
     end
+end
+
+function tetraPlotBedProbe(probeResults, probeSamples, z0=0, tit='bed probes')
+    hold off;
+    %p=tp.probe;ps=tp.probeSamples;z0=tp.probe_offset(3);
+    plot3(probeResults(:,1),probeResults(:,2),probeResults(:,3)-z0,'o-');
+    view(0,90);
+    xlabel X;ylabel Y;
+    lim = max(abs(probeResults(:)));
+    lim = 5 * ceil(lim/5);
+    xlim([-lim,lim]);
+    ylim([-lim,lim]);
+    grid on;
+    hold on;
+    plot3(probeSamples(:,1),probeSamples(:,2),probeSamples(:,3),'rd-');
+    legend('estimate','samples');
+    zlabel(sprintf('offset=%.3f',z0));
+    title(tit);
+    hold off;
+end
+
+function tetraPlotPlateProbe(probes,  vertex, tit='')
+    hold off;
+    plot3(probes(:,1),probes(:,2),probes(:,3),'o');
+    grid on;hold on;xlabel X;ylabel Y;
+    view(0,90);
+    plot3(vertex(:,1),vertex(:,2),vertex(:,3),'rx');
+    legend('plate probes','dimple vertex');
+    title(['Cal Plate probes ',tit]);
+    hi = max(abs(probes(:)));
+    hi = 5 * ceil(hi/5);
+    xlim([-hi,hi]);
+    ylim([-hi,hi]);
+    hold off
 end
