@@ -60,6 +60,14 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
         tetra.RMS.meas=0;
     end
 
+    % penalties for non-physicalness
+    da = td.cfg.arm_lengths;
+    da = max(da) - min(da);
+    err = err * da;
+    dr = td.cfg.delta_radius;
+    dr = max(dr) - min(dr);
+    err = err * (dr ^ 0.4);  % a little less weight on delta radius, where some significant difference is expected
+    
     err = err*1000;  % scale to be easier to read    
     if (mod(tetra.callCount,tetra.callPeriod) == 0) || ...
             (tetra.callCount == length(p)+1)  % this should be the initial guess

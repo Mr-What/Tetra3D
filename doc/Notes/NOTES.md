@@ -556,3 +556,65 @@ Stick with measured 101.3/102.
 plate 141 with bed 143 had very similar answers
 for both AZT and RZT.
 Check if RA improves scale?
+
+### 261106
+
+Started major refactor, change main parameter sub-strucuture in tetra data from .p and .k to .cfg and .kin respectively. 
+Single character names for central parameter strucures was
+a bad choice.
+
+Wrote new plotting routine to visualize plate fit error.
+```
+function q = tetraPlotPlateFit(meas,template
+                         [,w,mag,rem,reScale])
+ pm  -- plate measurement, dimple vertex X,Y locations
+ tp  -- template positions of dimples
+ w   -- weights (default, even weighting)
+ mag -- Magnify display of residual error by this much in plot
+ rem -- remark for title
+ reScale -- re-scale for best fit (false)
+```
+![plate fit error](./plateC144fit.svg "XY error to calibration plate")
+
+Had trouble getting network running on RPi at explora.
+It might be better to use my hotspot in the future.
+```
+nmap -sn 10.137.135.0/24
+```
+should find the RPi on the BoimPxel network.
+If your machine does not have nmap,
+you can ping the broadcast address,
+then the RPi should show up on the arp table
+```
+ping 10.137.135.255
+ping -b -c 2 10.137.135.255  # might be better
+arp -a
+```
+My procedure to set things up away from home will be:
+   1. enable hotspot BoimPixel
+   2. Boot RPi, it should connect
+   3. find RPi with other computer
+   4. ssh in, and edit /etc/wpa_supplicant/wpa_supplicant.conf to add another network, if you don't want to use the hotspot.
+	   * reboot, since I'm not sure if something like ```(ifdown wlan0;ifup wlan0)``` will work.
+	   * ```sudo bash -c "ip link set wlan0 down; sleep 30; ip link set wlan0 up"```
+
+Remember, cal process: 
+  1. set extruder temp 230, or what ever is needed for your filament
+  1. <pre><code> > SET_PATTERN_SCALE SCALE=66```
+      > HOME</code></pre>
+  1. print hex_outline.gcode
+  1. attach plate C to bed
+  1. <pre><code> > HOME
+      > DIMPLE_PROBE_SET SCALE=17</code></pre>
+  1. print probe_plateC.gcode
+  1. <pre><code>octave> pattern = 17*hexGrid(3);
+     octave> cp = tetraLoadPlateProbe('plateC148.log', pattern, 101.3/102);</code></pre>
+  1. print radial_bed_probe.gcode
+  1. <pre><code>octave> td = tetraLoadCalData('bed148.log',cp);
+     octave> gp = tetraCal('R',td);
+     octave> gp = tetraCal('AZT',td,gp,4,false);
+     octave> gp = tetraCal('RZT',td,gp,4,false);
+     octave> gp = tetraCal('RA', td,gp,4,false);</code></pre>
+
+I could also try putting a little error penalty on how unequal delta_radius or arm_lengths are.
+	 
