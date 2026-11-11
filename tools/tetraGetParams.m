@@ -3,11 +3,11 @@
 %
 % Tower A is in the -x,-y quadrant (front left)
 % Tower B is in the  x,-y quadrant (front right)
-% Tower C is near the x=0 axis     (rear)
+% Tower C is on the  x=0  axis     (rear)
 %
 % For interface (.cfg), we define :
 %          delta_radius  (mm)
-%          delta_angles (usually [210,330,90])
+%          tower_angles (usually [210,330])
 %          arm_lengths
 %          tilt_radial      (towards origin)
 %          tilt_tangential  (towards left as tower facing origin)
@@ -56,9 +56,10 @@ function kp = tetraKineticParams(p)
     kp.arm = p.arm_lengths;
     kp.endstop = p.position_endstops;
     kp.mmPerRot = p.rotation_distances;
+    dang = [p.tower_angles, 90];  % C defined at 90
+    r = p.delta_radius;
     for n=1:3
-        a = p.delta_angles(n);
-        r = p.delta_radius(n);
+        a = dang(n);
         q = r * [cosd(a), sind(a), 0];
         kp.base(n,:) = q;
         z = p.tilt_radial(n);
@@ -82,8 +83,8 @@ end
         
 function p = tetraDefinitionParams(k)
     p.arm_lengths = k.arm;
-    p.delta_radius = [150,150,150];
-    p.delta_angles = [210,330,90];
+    p.delta_radius = 150;
+    p.tower_angles = [210,330];
     p.tilt_radial = [0,0,0];
     p.tilt_tangential = [0,0,0];
     p.position_endstops = k.endstop;
@@ -91,11 +92,13 @@ function p = tetraDefinitionParams(k)
     kp.base = [ [-1,-1,0] ; [1,-1,0]; [0,0,1] ];
     kp.dir = [[0,0,1],[0,0,1],[0,0,1]];
 
+    p.delta_radius = k.base(3,2);
     for n=1:3
         q = k.base(n,:);
         r = norm(q);
-        p.delta_radius(n) = r;
-        p.delta_angles(n) = atan2d(q(2), q(1));
+        if n < 3
+            p.tower_angles(n) = atan2d(q(2), q(1));
+        end
         rHat = -q / norm(q);
         tHat =  [-q(2), q(1), 0];
         d = k.dir(n,:);

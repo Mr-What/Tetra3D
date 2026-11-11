@@ -11,17 +11,13 @@ tetra.echoMeas=false;  % true will print diag ONCE until reset
 tetra.plotFlags=3;  % flags to enable some plots
 tetra.measFileIdeal='idealDeltaCalMeas10_60.m';
 
-% C printf style format of log file, convert int probe ID number to string
-%    This file contains tetra parameters echoed at start up,
-%    and bed probe data
-tetra.logFileFmt = 'probe%03d.log';
-
 % name or IP of klipper host computer (usually an RPi)
 tetra.host = 'tetrapi'; % 192.168.2.66
 
-% path to tetra utilities on klipper host computer, with trailing /
+% path to tetra utilities on klipper host computer
 tetra.hostUtilPath = '~pi/bin';
 
+% hack to extract parts of error metric from SimplexMinimize
 tetra.RMS = struct('bed',0,'plate',0,'meas',0);
 
 % there are places where we don't want simplex diagnostics.
@@ -37,73 +33,80 @@ tetra.envelope=struct('tooClose',.98,'tooSideways',.3);
 suppress_verbose_help_message(true);  % turn off help help at the bottom of help messages
 
 % ------------------------------- calibration settings
-tetra.cfgFields = {'delta_radius','delta_angles','arm_lengths',...
+tetra.cfgFields = {'delta_radius','tower_angles','arm_lengths',...
                    'tilt_radial','tilt_tangential','position_endstops', ...
                    'rotation_distances'};
 clear id
 
 % always check endstops, so I'll remove E from IDs.  Redundant.
 
-id.id = 'RPAZT';  % full calibration (not recommended)
+% this should only be used when DZT and AZT are not quite converging
+% or oscillation.  Mostly for refinement without annealing,
+%   e.g.    gp = tetraCal('DAZT',td,igp,3,false)
+id.id = 'DAZT';  % full calibration (not recommended)
 id.fields = tetra.cfgFields(1:6);
 id.scalar=[];
-id.initialStep = [3,3,3, 2,2,2, 3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
-id.smallBox = [2,2,2, 2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
+id.initialStep = [3, 2,2,  3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
+id.smallBox =    [2, 2,2,  2,2,2,  1,1,1,  1,1,1, 2,2,2]/10000;
 id.callPeriod = 50;
 tetra.cal.(id.id) = id;
 
-id.id = 'RA';
-id.fields = tetra.cfgFields([1,3,6]);
-id.initialStep = [2,2,2, 1,1,1, 2,2,2];
+id.id = 'DA';
+id.fields = tetra.cfgFields([1:3,6]);
+id.initialStep = [2, 1,1, 1,1,1, 2,2,2];
 id.smallBox = id.initialStep / 10000;
 tetra.cal.(id.id) = id;
 
-id.id = 'RZT';  
-id.fields = tetra.cfgFields([1,4:6]);
-id.initialStep = [3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
-id.smallBox = [2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
+id.id = 'A';
+id.fields = tetra.cfgFields([3,6]);
+id.initialStep = [1,1,1, 2,2,2];
+id.smallBox = id.initialStep / 10000;
+tetra.cal.(id.id) = id;
+
+id.id = 'DZT';  
+id.fields = tetra.cfgFields([1,2,4:6]);
+id.initialStep = [3,  2,2,  1,1,1, 1,1,1,  2,2,2]/10;
+id.smallBox =    [2,  1,1,  1,1,1, 1,1,1,  2,2,2]/10000;
 tetra.cal.(id.id) = id;
 
 id.id = 'AZT';
 id.fields = tetra.cfgFields(3:6);
 id.initialStep = [3,3,3,  2,2,2,  2,2,2, 2,2,2]/10;
-id.smallBox = [2,2,2, 1,1,1, 1,1,1, 2,2,2]/1000;
+id.smallBox =    [2,2,2,  1,1,1,  1,1,1, 2,2,2]/10000;
+tetra.cal.(id.id) = id;
+
+id.id = 'ZT';
+id.fields = tetra.cfgFields(4:6);
+id.initialStep = [2,2,2,  2,2,2, 2,2,2]/10;
+id.smallBox =    [1,1,1,  1,1,1, 2,2,2]/10000;
 tetra.cal.(id.id) = id;
 
 id.id = 'A1ZT';
 id.scalar = 1;
 id.initialStep = [3,  2,2,2,  2,2,2, 2,2,2]/10;
-id.smallBox = [2, 1,1,1, 1,1,1, 2,2,2]/10000;
-tetra.cal.(id.id) = id;
-
-id.id = 'R1';
-id.fields = tetra.cfgFields([1,6]);
-id.initialStep = [1,1,1,1];
-id.smallBox = [1,1,1,1] * 0.0003;
-id.callPeriod = 10;
+id.smallBox =    [2,  1,1,1,  1,1,1, 2,2,2]/10000;
 tetra.cal.(id.id) = id;
 
 id.id = 'R';
-id.initialStep = [1,1,1,1,1,1];
-id.smallBox = [1,1,1,1,1,1] * 0.0003;
+id.fields = tetra.cfgFields([1,6]);
+id.initialStep = [1, 1,1,1];
+id.smallBox =    id.initialStep * 0.0003;
+id.scalar=[];
+id.callPeriod = 10;
+tetra.cal.(id.id) = id;
+
+id.id = 'D';
+id.fields = tetra.cfgFields([1,2,6]);
+id.initialStep = [1, 1,1, 1,1,1];
+id.smallBox = id.initialStep * 0.0003;
 id.scalar=[];
 tetra.cal.(id.id) = id;
 
-id.id = 'RA1ZT';
-id.fields = tetra.cfgFields([1,3:6]);
-id.scalar=[2]; % second field, arm_lengths is scalar
-id.initialStep = [4,4,4, 2,  2,2,2,  2,2,2, 2,2,2]/10;
+id.id = 'DA1ZT';
+id.fields = tetra.cfgFields([1:6]);
+id.scalar=[3]; % third field, arm_lengths is scalar
+id.initialStep = [4, 2,2, 2,  2,2,2,  2,2,2, 2,2,2]/10;
 id.smallBox = ones(1,13)/2000;
-id.callPeriod = 50;
-tetra.cal.(id.id) = id;
-
-% this should only be used when RZT and AZT are not quite converging
-% or oscillation.  Mostly for refinement without annealing,
-%   e.g.    gp = tetraCal('RAZT',td,igp,3,false)
-id.id = 'RAZT';
-id.scalar=[];
-id.initialStep = [4,4,4, 2,2,2,  2,2,2,  2,2,2, 2,2,2]/30;
-id.smallBox = ones(1,15)/5000;
 id.callPeriod = 50;
 tetra.cal.(id.id) = id;
 

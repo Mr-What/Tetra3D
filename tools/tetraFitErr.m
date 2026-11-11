@@ -63,10 +63,9 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
     % penalties for non-physicalness
     da = td.cfg.arm_lengths;
     da = max(da) - min(da);
-    err = err * da;
-    dr = td.cfg.delta_radius;
-    dr = max(dr) - min(dr);
-    err = err * (dr ^ 0.4);  % a little less weight on delta radius, where some significant difference is expected
+    if da > 0.1
+        err = err * (1 + da - 0.1);  % small penalty for large arm length variation
+    end
     
     err = err*1000;  % scale to be easier to read    
     if (mod(tetra.callCount,tetra.callPeriod) == 0) || ...
@@ -75,6 +74,9 @@ function [err,errZ,badZ,errXY,badXY] = tetraFitErr(p, cal, td, igp)
         fprintf(1,'%4d %.6g  ',tetra.callCount, err);
         fprintf(1,' %.5g',p);
         fprintf(1,'\n');
+    end
+    if err < 1e-5
+        keyboard
     end
 end
 

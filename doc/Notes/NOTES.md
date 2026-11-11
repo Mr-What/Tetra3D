@@ -618,3 +618,44 @@ Remember, cal process:
 
 I could also try putting a little error penalty on how unequal delta_radius or arm_lengths are.
 	 
+### 261109
+
+Tagged v0.1.  Last version using original parameter set.
+
+After some thought, I realize that base locations
+should be a 3 parameter space.
+Klipper used a single delta_radius, and angles for
+towers A and B, which I think is a good choice.
+Tower C is assumed to be at [0,R].
+This only makes the assertion that the origin is within
+trangle A, B, C.
+<strike>Similarly, instead of 6 angles for the tower directions,
+I only need to define a point, above the bed,
+on the tower axis.
+I can use a similar convention.
+Since I do assert that the shifted "center" of the top
+is within triangle A, B, C at that height, I don't want
+to assert the whole height of the tower.
+The top center could well drift outside of triangle A,B,C
+up where the top radius, Rt is small.
+Choose top to be near the top of the envelope.
+Then we can describe another set of tower points in a similar manner.
+Ct is at [0,Rt,Zt].
+At and Bt are at angle DAt, and DBt at radius Rt,
+height at arbitrary height Zt ~= top of envelope.</strike>
+Nope.  we still need 6 params.  This does not address twist.
+
+Re-work the whole system with new parameterization:
+```
+[printer]
+kinematics: tilted_delta
+delta_radius: 169
+tower_angles: 210, 330
+arm_lengths: 238, 238, 238
+tilt_radial: 13 , 13 , 13
+tilt_tangential: 0 , 0 , 0
+```
+
+These changes reduce the calibration parameter rank from 18 to 15.
+
+

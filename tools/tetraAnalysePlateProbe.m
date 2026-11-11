@@ -32,8 +32,8 @@ function pd = tetraAnalysePlateProbe(probe, pattern=[], plateScale=1, patternCod
     
     % re-compute with fixed dimple wall slope
     [dimple,q] = fixedConeFits(pd.cluster,pd.dimpleSlope);
-    pd.dimple = dimple;
-    pd.q = q;
+    pd.dimpleAll = dimple;
+    pd.qAll = q;
 
     % ------------------------------ Store ideal dimple vertex locations
     % ideal locations, for plates so far, will be every 20mm.
@@ -45,10 +45,16 @@ function pd = tetraAnalysePlateProbe(probe, pattern=[], plateScale=1, patternCod
     end
     d0 = plateScale * d0;  % initial printed plates had some shrinkage, plateScale ~< 1
     pd.plateScale = plateScale;
+    [idxA,idxB] = matchedPoints(dimple(:,1:2),d0);
+    dimple = dimple(idxA,:);
+    q = q(idxA);
+    d0 = d0(idxB,:);
+    pd.dimple = dimple;
+    pd.q = q;
     pd.dimpleIdeal = d0;
 
     % ------------------------------------- weights for measured dimples
-    [rot, x1, y1, w] = weightedRigidTransform2D(dimple, q, d0);
+    [rot, x1, y1, w] = weightedRigidTransform2D(dimple(:,1:2), q, d0);
     pd.plateRot = rot;
     pd.plateShift = [x1,y1];
     pd.w = w;

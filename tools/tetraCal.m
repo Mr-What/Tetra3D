@@ -3,8 +3,8 @@
 % General tetra calibration.    Configuration  is in tetra.cal
 %
 % Code for calibration type ID follows this convention:
-%     R - delta radii
-%     *** P - [DEPRICATED  Keep delta_angles with designed values]
+%     R - delta radius
+%     D - delta radius AND angles
 %     A - delta arm length
 %     Z - zenith tilt (tilt_radial)
 %     T - tangential_tilt
@@ -25,7 +25,7 @@
 %         to calibrate delta_radius (R) and arm_lengths (A) simultaneously.
 %
 %   id     -- id string, choose from fieldnames(tetra.cal)
-%   td     -- Tetra calibnration Data
+%   td     -- Tetra calibration Data
 %   gp0    -- initial guess at tetra parameters, td.p is default
 %   maxTry -- repeat optimizing from random offsets near current bset,
 %             until we have had maxTry unsuccesful attempts at improvement
@@ -83,18 +83,19 @@ function gp = tetraCal(id, td, gp0=[], maxTry=2, randomRefine=true)
             nTry = nTry + 1;
         end
 
-        f = tetra.plotFlags;
-        tetra.plotFlags = 7;
-        [pe,peXY,peBad] = tetraPlateErr(td.kin,td.calPlate,gpn.kin);
-        tetra.plotFlags=f;
-        figure 2
-        tit = [td.logFileName, '   plate:',td.calPlate.plateProbeFile]
-        %klipPlotProbes(pp.probe,pp.logFileName);
-        tetraPlotBedFitErr(td.probe, td.pos,td.cfg.position_endstops,gpn);
-        xlabel(sprintf('%d) X(mm)',n));
-        figure 1
+        if isfield(td,'calPlate')
+            f = tetra.plotFlags;
+            tetra.plotFlags = 7;
+            [pe,peXY,peBad] = tetraPlateErr(td.kin,td.calPlate,gpn.kin);
+            tetra.plotFlags=f;
+            figure 2
+            tit = [td.logFileName, '   plate:',td.calPlate.plateProbeFile]
+            %klipPlotProbes(pp.probe,pp.logFileName);
+            tetraPlotBedFitErr(td.probe, td.pos,td.cfg.position_endstops,gpn);
+            xlabel(sprintf('%d) X(mm)',n));
+            figure 1
+        end
     end
-    
     gp = gpv(iMin);
     gp.gpv = gpv;  % pass back everything, just in case
     gp.gpvMin=iMin;

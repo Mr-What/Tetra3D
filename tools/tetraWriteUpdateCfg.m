@@ -33,7 +33,7 @@ function tetraWriteUpdateCfg(update, gp=[], tp=[], note=' ')
 
     hdr = false;  % have we written [printer] section header yet?
     hdr = writeValueUpdate(fid,update,'delta_radius'   ,hdr);
-    hdr = writeValueUpdate(fid,update,'delta_angles'   ,hdr);
+    hdr = writeValueUpdate(fid,update,'tower_angles'   ,hdr);
     hdr = writeValueUpdate(fid,update,'arm_lengths'    ,hdr);
     hdr = writeValueUpdate(fid,update,'tilt_radial'    ,hdr);
     hdr = writeValueUpdate(fid,update,'tilt_tangential',hdr);
@@ -59,5 +59,12 @@ function hdr = writeValueUpdate(fid, update, nam, hdr)
         fprintf(fid,'[printer]\n');
         hdr = true;
     end
-    fprintf(fid,'%s: %.6f , %.6f , %.6f\n', nam, update.(nam));
+    n = length(update.(nam));
+    if n==1
+        fprintf(fid,'%s: %.4f\n', nam, update.(nam));
+    elseif n==2
+        fprintf(fid,'%s: %.4f , %.4f\n', nam, update.(nam));
+    else
+        fprintf(fid,'%s: %.6f , %.6f , %.6f\n', nam, update.(nam));
+    end
 end
