@@ -17,7 +17,7 @@ Dblock = 16; // nozzle NOT centered in +-D direction
 DsocketHeadM3 = 5.4;
 HsocketHeadM3 = 3;
 
-hotEnd();
+%hotEnd();
 
 %translate([0,20,43.35])
 rotate([0,90,-90])  // let face of carriage be y=0
@@ -27,8 +27,8 @@ railMGN7H();
 translate([0,0,Hbody-WtopFlange-Wmount/2])
 %retentionTab();
 
-%translate([0,0,Hbody-WtopFlange-Wmount/2])
-hotEndMount(false);
+translate([0,0,Hbody-WtopFlange-Wmount/2])
+hotEndMount(false,false);
 //} translate([0,0,53]) cube([80,80,20],center=true);}
 
 WmountBrace=14;
@@ -72,7 +72,7 @@ module hotEndMount(withBrace=true, carriageBase=true) difference() {
     }
     
     translate([0,18,0]) pairX(13) rotate([90,0,0]) cylinder(r=1.6,h=14,$fn=RES/2);
-    translate([0,19,0]) pairX(13) rotate([90,0,0])  // M3 nut hole 
+    translate([0,19,0]) pairX(13) rotate([90,30,0])  // M3 nut hole 
        cylinder(d1=6.8, d2=5.5/cos(30),h=10,$fn=6);
     
     translate([-25,20,-51]) cube([50,16,80]);    // don't overlap carriage

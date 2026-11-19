@@ -289,6 +289,9 @@ module onMag() onMount() { %ball();
     mirrorY(0) rotate([-aMag,0,0]) translate([0,0,-dBall/2]) children(); }
     
 
-/* $Id$
-$Log$
+/* $Id: kinematicMount.scad,v 1.4 2026/11/13 17:20:25 aaron Exp aaron $
+$Log: kinematicMount.scad,v $
+Revision 1.4  2026/11/13 17:20:25  aaron
+*** empty log message ***
+
 */

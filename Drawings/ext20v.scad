@@ -5,7 +5,12 @@
 
 //slotV20profile(3);
 //ext20profile(3);
-ext20v(50,0.2);
+//ext20v(50,0.2);
+
+//import("Vslot2020.dxf");  // low res with odd extra part
+//import("2020_extrusion.dxf"); // T-slot
+//import("2020_extrusionA.dxf");n // more T-slot
+%import("V-Slot 20x20.dxf");
 
 module ext20v(len,kerf=0,verbose=0) {
   if (kerf == 0)
@@ -42,7 +47,7 @@ sr = 1+1.9+(6.2/2);
 
   // actual slot profile
   if(verbose % 2) %hull() {
-    translate([-10+2+1.2/2]) square([1.2,10.6],center=true);
+    translate([-10+2+1.2/2,0]) square([1.2,10.6],center=true);
     translate([-5,0]) square([2,4],center=true);
   }
 

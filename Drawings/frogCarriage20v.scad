@@ -1,4 +1,4 @@
-// $Id: frogCarriage20v.scad,v 1.1 2026/03/15 21:05:29 aaron Exp aaron $
+// $Id: frogCarriage20v.scad,v 1.2 2026/11/13 17:19:12 aaron Exp aaron $
 // frog carriage design, for OpenBuilds 20mm V-slot extrusion,
 // with low-profile OpenBuilds solid v-wheels
 
@@ -298,6 +298,9 @@ module vWheel() rotate_extrude($fn=RES*2) polygon([
 //%translate([0,-40,6-1.8]) rotate([0,180,0]) microswitchEndstop20v(0);
 
 // $Log: frogCarriage20v.scad,v $
+// Revision 1.2  2026/11/13 17:19:12  aaron
+// *** empty log message ***
+//
 // Revision 1.1  2026/03/15 21:05:29  aaron
 // Initial revision
 //

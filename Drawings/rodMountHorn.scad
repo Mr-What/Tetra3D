@@ -2,7 +2,7 @@
 
 // parameters for rod mount horns.
 // these parameters should be the same for the carriage horns.
-separation = 40+10;  // Distance between ball joint mounting faces.
+separation = 40+10+10;  // Distance between ball joint mounting faces.
 cone_r1 = 2.5;
 cone_r2 = 14;//20;
 cone_height=18;
@@ -10,7 +10,7 @@ cone_height=18;
 module rodMountHorn(sep=separation, r1=cone_r1, r2=cone_r2, h=cone_height) {
   for (s = [-1, 1]) scale([s, 1, 1])
     translate([sep/2-9, 0, 0]) rotate([0, 90, 0])
-      cylinder(r1=r2, r2=r1, h=h, center=true, $fn=64);
+      cylinder(r1=r2, r2=r1, h=h, center=true, $fn=96);
 }
 
 m3rad = 2.94/2;

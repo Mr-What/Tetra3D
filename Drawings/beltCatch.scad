@@ -2,14 +2,20 @@ beltThick  = 1.45 + 0.2;  // thickness of belt from back to tooth tip
 // the doubled belt part must be very tight, or teeth will slip.
 beltThick2 = 2.35 + 0.1;  // thickness of DOUBLED over belt, teeth interlocked
 
-module beltCatch(height,full=false)
+module beltCatch(height=6, full=false) union() {
+    beltCatchMain(height,full);
+    translate([0,0,-1.95]) linear_extrude(2) hull()
+        projection(cut=false) beltCatchMain(1,full);
+}
+
+module beltCatchMain(height=6,full=false)
 {
   postRad = 2.7;  // radius of main post
   // post is a little thin to safely support a screw.
   // move pilot screw hole to an outer brace
   //difference() {
     hull() {
-      cylinder(h=height,r=postRad,$fn=32);
+      cylinder(h=height,r=postRad,$fn=48);
       translate([-postRad,0,0]) cube([0.6,2.0*postRad,height]);
     }
   //  translate([0,0,height-4]) cylinder(h=5,r=.6,$fn=11);  // pilot hole for optional lock-in screw
@@ -18,7 +24,7 @@ module beltCatch(height,full=false)
   difference() {
     union() {
       difference() {
-        cylinder(h=height,r=postRad+beltThick+3,$fn=48);
+        cylinder(h=height,r=postRad+beltThick+3,$fn=64);
         translate([0,0,-1]) cylinder(h=height+2,r=postRad+beltThick,$fn=48);
         translate([-10,0,-1]) cube([10,20,height+2]);
         translate([-10*.7071,10*.7071,-1]) rotate([0,0,-45]) cube([10,20,height+2]);
@@ -35,24 +41,25 @@ module beltCatch(height,full=false)
     }
 
     // chop off (unnecessary) bottom curve part of catch
-    translate([-12 ,-15,-1]) cube([24,15-postRad-beltThick-0.2,height+2]);
-    translate([-2.5,-15,-1]) cube([ 5,15-postRad-0.2          ,height+2]);
+    translate([-12 ,-15,-2.1]) cube([24,15-postRad-beltThick-0.2,height+3]);
+    translate([-2.5,-15,-2.1]) cube([ 5,15-postRad-0.2          ,height+3]);
 
     if (!full) {
       // chop off most of far brace for close quarters
-      translate([postRad+1,-8,-1]) cube([10,20,height+2]);
-      translate([-2,-7,-1]) rotate([0,0,-45]) cube([5,10,height+2]);
+      translate([postRad+1,-4,-2.1]) cube([10,20,height+3]);
+      translate([-2,-7,-2.1]) rotate([0,0,-45]) cube([5,10,height+3]);
     }
 
     // pilot hole for optional lock-in screw
     translate([1,1.7*postRad+.7*beltThick+3,height-4])
-      cylinder(h=5,r=1,$fn=8);
+      cylinder(h=5,r=1,$fn=9);
 
   }
 }
 
 union(){
-  beltCatch(6.3);
-  translate([-6.4,-4.5,-2.5]) cube([10.1,20.4,2.7]);
+  beltCatch(6.2);
+  //translate([-6.4,-4.5,-2.5]) cube([10.1,20.4,2.7]);
 }
 %translate([0,-20,0]) mirror([0,1,0]) beltCatch(6,full=true);
+%translate([-3,-8,3]) cube([2,60,6],center=true);

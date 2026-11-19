@@ -10,12 +10,27 @@ CenterHeight = BeltClearance + BeltWidth/2;
 CR=2;  // corner radius
 
 $t=0;  // 0..1 for animation
-translate([45-10*$t,0,0]) {
-%armProxy();
-translate([0,0,23]) { %mirror([0,0,1]) idlerClamp();
 
-idlerClamp();}}
-screwBase();
+//VERS=1;  // original bolted fork, with dual m3 tensioners
+//VERS=2;  // lighter version.  Perhaps problematic because stiffer may be better
+VERS=3;  // xtra stiff, see if single M5 tensioner can be sufficient
+
+%armProxy();
+
+if (VERS == 1) {  // original, bolted fork, dual M3 tensioners
+    // oops.  lost.
+} else if(VERS == 2) {
+  translate([45-10*$t,0,0]) {
+    translate([0,0,23]) { %mirror([0,0,1]) idlerClampLite();
+    idlerClampLite();}}
+  screwBaseLite();
+} else if (VERS==3) {
+  translate([45-10*$t,0,0]) {
+    translate([0,0,23]) { %mirror([0,0,1]) idlerClampLite();
+    idlerClampLite();}}
+  screwBaseLite();
+    
+}
 
 use <util.scad>;
 
