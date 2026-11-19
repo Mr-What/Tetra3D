@@ -16,7 +16,7 @@ rotate([0,RailTilt-90,-90]) translate([20,100,100]) baseRail(40,.1);
 module tetraExtrusions(kerf=.1) for (a=[-120,0,120]) rotate(a) {
     translate([0,TowerRadius,0])
         rotate([RailTilt,0,0]) ext20(TowerExtLen,kerf);
-    translate([0,-cos(60)*TowerRadius-20,BaseRailHeight])
+    translate([0,-cos(60)*TowerRadius-16,BaseRailHeight])
         baseRail(BaseExtLen,kerf);
 }
 

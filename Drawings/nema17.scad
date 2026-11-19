@@ -18,13 +18,13 @@ module nema17() {
   }
 }
 
+module onNema17mountHoles() for (a=[0:90:355]) rotate([0,0,a])
+    translate([15.5,15.5,0]) children();
+
 module nema17holes() {
   cylinder(r=11+1, h=4+5, $fn=48);
   cylinder(r=2.5+.2, h=25, $fn=36);
-  for (a = [0:90:359]) {
-    rotate([0, 0, a]) translate([15.5, 15.5, 0])
-      cylinder(r=2.94/2+.2, h=10, $fn=11);
-  }
+  onNema17mountHoles() cylinder(r=2.94/2+.2, h=10, $fn=11);
 }
 
 nema17();
