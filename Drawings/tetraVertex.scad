@@ -23,21 +23,20 @@ module showCarriage() translate([0,-60,280]) rotate([90+RailTilt,0,0]) {
 
 // clearnce to mount stepper, in nema17 coords
 module stepperClearance() { // clearnce to mount stepper, in nema17 coords
-        // main open area at back
-        *hull() {
-            pairX(20) translate([0,-80,0*BaseRailHeight])
-                #rotate([RailTilt,0,0]) translate([0,0,-20])
-                   cylinder(r=8,h=100,center=true,$fn=RES/2);
-            #translate([0,-140,50]) cube([120,1,90],center=true);
-        }
+    // main open area at back
+    hull() {
+        pairX(26) translate([0,0,-4-4])
+            rotate([90,0,0])
+                cylinder(r=8,h=100,center=true,$fn=RES);
+        translate([0,0,-90]) cube([180,100,1],center=true);
+    }
     
         // open area after stepper mount plate
-        hull() {
-            #translate([0,0,23-4]) rotate([90,0,0])
-                cylinder(r=8,h=100,center=true,$fn=RES/2);
-            #pairX(18-4) translate([0,-56.9+4,50]) rotate([RailTilt,0,0])
-                cylinder(r=8, h=80,center=true, $fn=RES);
-        
+    hull() {
+        translate([0,0,27-4]) rotate([90,0,0])
+            pairX(12) cylinder(r=4,h=100,center=true,$fn=RES);
+        pairX(20) translate([0,0,3.9+4]) rotate([90,0,0])
+            cylinder(r=4, h=80,center=true, $fn=RES);
     }
 }
 
@@ -72,7 +71,7 @@ module vertex() difference() {
     atNema17() {
         %nema17();
 
-        //nema17holes();
+        #nema17holes();
         //nema17MountHoles();
         %translate([0,0,23.4]) rotate([180,0,0]) toothedPulley();
         %translate([0,0,3.5]) cube([20,10,7],center=true);  // show typical spacing of pulley from mount face
@@ -87,6 +86,33 @@ module boltM5(len,kerf=.05) {
     translate([0,0,-19.9]) cylinder(d1=M5head+1+kerf,d2=M5head+kerf, h=20, $fn=RES);
     cylinder(d=M5diam+kerf*2,h=len,$fn=RES/2);
 }
+
+
+module baseVertexShell() {
+cr=4;  // corner radius
+zHi=10-cr;
+zLo=-10+cr;
+    hull() {
+      for(x=[-1,1]) {
+        translate([11*x,70,zHi]) sphere(r=cr,$fn=RES);
+        translate([11*x,75.5,zLo-20]) sphere(r=cr,$fn=RES);
+
+        translate([36.5*x,65,zHi   ]) sphere(r=cr,$fn=RES);
+        translate([36.5*x, 65,zLo-10]) sphere(r=cr,$fn=RES);
+        translate([87.5*x,-25,zLo- 6]) sphere(r=cr,$fn=RES);
+        translate([82  *x,-35,zLo- 6]) sphere(r=cr,$fn=RES);
+        translate([87.5*x,-25,  0   ]) sphere(r=cr,$fn=RES);
+
+        // extra bump to keep central rail ridge
+        %translate([84*x,-30,0]) sphere(r=10,$fn=RES*1.5);
+        translate([74*x,-36,zHi]) sphere(r=cr,$fn=RES/2);
+          
+        // bottom level for step motor mount
+        translate([28*x,34,-38]) sphere(r=6,$fn=RES*1.5);
+      }
+    } // end hull
+}
+
 
 // shave off some odities from main vertex and drill holes
 module baseVertex() difference() {
@@ -148,27 +174,6 @@ module baseVertex() difference() {
     scale([1,1,2])bevilThroughHole(3,4.5);
 
   //translate([-100,-100,-50]) cube([100,200,100]);
-}
-
-module baseVertexShell() {
-cr=4;  // corner radius
-zHi=10-cr;
-zLo=-10+cr;
-    hull() {
-      for(x=[-1,1]) {
-        translate([11*x,70,zHi]) sphere(r=cr,$fn=RES);
-        translate([11*x,75.5,zLo-20]) sphere(r=cr,$fn=RES);
-
-        //for(z=[zLo,zHi]) translate([27*x,56,z]) sphere(r=cr,$fn=24);
-        //for(z=[zLo,zHi]) translate([52*x,-12,z]) sphere(r=cr,$fn=24);
-
-        // extra bump to keep central rail ridge
-        translate([63*x,-25,0]) sphere(r=10,$fn=RES*1.5);
-
-        // bottom level for step motor mount
-        translate([26*x,29,-34]) sphere(r=6,$fn=RES*1.5);
-      }
-    } // end hull
 }
 
 module nema17MountHoles() {

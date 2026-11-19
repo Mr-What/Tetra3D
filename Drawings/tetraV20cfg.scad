@@ -3,7 +3,7 @@
 // Put drawings for parts like apex and vertex in other files,
 // and use this STL for cut outs.
 
-BaseExtLen = 460;
+BaseExtLen = 450;
 RailTilt = 10; // degrees
 TowerExtLen = 1500;  // length of extrusion
 TowerRadius = 310; // at z==0 to center of extrusion
