@@ -1,4 +1,4 @@
-
+// vertex for 10 deg tilt rails on tetrahedral frame of 2020 extrusions
 RES=24;
 
 include<tetraV20cfg.scad>
@@ -65,14 +65,49 @@ module vertex() difference() {
     }
 
     // sideways bolts on tower
-    translate([0,-BaseRailHeight/tan(90-RailTilt),BaseRailHeight])
+    for(z=[BaseRailHeight,35]) translate([0,-z/tan(90-RailTilt),z])
         mirrorX(18) rotate([0,-90,0]) boltM5(20);
-    
+
     mirrorX(0) baseRailBoltHoles();
 }
 
+// base rail AC has slope tan(60), and intercept at 
+//   TowerRadius + dBaseRail/cos(60)
+// make a function to a given distance along rail CA
+c60 = cos(60);  // x component of rail direction
+s60 = sin(60);  // y component of rail direction
+y0 = dBaseRail / c60;
+c30 = cos(30); s30 = sin(30);
+module onRailCA(d) translate([-s30*d, y0-c30*d,BaseRailHeight]) children();
+
+%onRailCA(100) sphere(10);
 module baseRailBoltHoles() {
+    for(d=[90,145]) onRailCA(d) {
+        translate([0,0,-35]) cylinder(d=3,h=50,$fn=RES/2);
+        translate([0,0,-10-6]) rotate([180,0,0])
+            cylinder(d1=M3head-.05,d2=M3head+2,h=20,$fn=RES/2);
+    }
+    for (d=[100,145]) onRailCA(d) rotate([0,90,-30]) {
+        cylinder(d=3,h=20,$fn=RES/2);
+    }
     
+    // make extra indentations for nut insertion
+    // takes too  much out of vertex.  skip these
+    //onRailCA(61) {
+    //    rotate([0,-90,-30]) translate([0,0,10]) railNutInsertionArea();
+    //    rotate([0,0,-30]) translate([0,0,10]) railNutInsertionArea();
+    //}
+}
+
+// bottom of slots at 6.6mm
+// larger, not insertable nuts 10mm long, 9mm wide, 4.4mm thick
+module railNutInsertionArea() {
+    %translate([0,0,-6.5+2.2]) cube([9,19,4.4],center=true);
+    translate([0,11,-6.5]) hull() {
+        cylinder(d1=8.8,d2=10,h=7,$fn=RES/2);
+        translate([0,-18,0]) rotate(45)
+            cylinder(d1=9*1.41,d2=10*1.41,h=7,$fn=4);
+    }
 }
 
 module boltM5(len,kerf=.05) {
@@ -99,12 +134,13 @@ yLo=-30;
         translate([86.5*x,yLo,zLo-6]) sphere(r=cr,$fn=RES/2);
         translate([74  *x,yLo,zHi  ]) sphere(r=cr,$fn=RES/2);
 
-        %translate([79.8*x,yLo,0]) sphere(r=10,$fn=RES*1.5);
+        //%translate([79.8*x,yLo,0]) sphere(r=10,$fn=RES*1.5);
           
         // bottom level for step motor mount
         translate([28*x,34,-26]) sphere(r=6,$fn=RES*1.5);
     } // end hull
 }
+//%onRailCA(158) sphere(r=10,$fn=RES);  // should match align sphere commented out above
 
 /*
 // shave off some odities from main vertex and drill holes

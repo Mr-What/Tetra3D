@@ -7,17 +7,20 @@ include<tetraV20cfg.scad>
 
 tetraExtrusions();
 
-// extra drawing, but with the end cutouts to make foot
-rotate([0,RailTilt-90,-90]) translate([20,100,100]) baseRail(40,.1);
-
 %translate([0,0,1450]) %circle(d=110,$fn=90);
 %translate([0,0,  71]) %circle(d=380,$fn=90);
+
+c60 = cos(60);
+BaseRadius = c60 * TowerRadius + dBaseRail;  // center of base rail to z axis
+
+// extra drawing, but with the end cutouts to make foot
+translate([0,-BaseRadius+50,0])
+rotate([90,90-RailTilt,-90]) translate([-20,0,0]) baseRail(40,.1);
 
 module tetraExtrusions(kerf=.1) for (a=[-120,0,120]) rotate(a) {
     translate([0,TowerRadius,0])
         rotate([RailTilt,0,0]) ext20(TowerExtLen,kerf);
-    translate([0,-cos(60)*TowerRadius-16,BaseRailHeight])
-        baseRail(BaseExtLen,kerf);
+    translate([0,-BaseRadius,BaseRailHeight]) baseRail(BaseExtLen,kerf);
 }
 
 // add extra cut-outs for vertex

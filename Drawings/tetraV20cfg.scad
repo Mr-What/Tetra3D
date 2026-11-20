@@ -8,12 +8,14 @@ RailTilt = 10; // degrees
 TowerExtLen = 1500;  // length of extrusion
 TowerRadius = 310; // at z==0 to center of extrusion
 BaseRailHeight = 60;
+dBaseRail = 16;  // center of base rail this far outside the tower base triangle
 
 module ext20(len,kerf=.08) linear_extrude(len) ext2020cutOutProfile(kerf);
 
 
 M5diam = 4.92;//4.88/2;
 M5head = 8.62;//8.5;  // 5mm head height, uses 4mm hex drive
+M3head = 5.36;
 
 module pairX(d) for(a=[-d,d]) translate([a,0,0]) children();
 module pairY(d) for(a=[-d,d]) translate([0,a,0]) children();
