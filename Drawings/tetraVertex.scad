@@ -25,17 +25,17 @@ module showCarriage() translate([0,-60,280]) rotate([90+RailTilt,0,0]) {
 module stepperClearance() { // clearnce to mount stepper, in nema17 coords
     // main open area at back
     hull() {
-        pairX(26) translate([0,0,-4-4])
-            rotate([90,0,0])
-                cylinder(r=8,h=100,center=true,$fn=RES);
-        translate([0,0,-90]) cube([165,100,1],center=true);
+        pairX(22) translate([0,0,-4-4]) rotate([90,0,0])
+                cylinder(r=8,h=60,center=true,$fn=RES);
+        translate([0,0,-75]) rotate([-RailTilt,0,0])
+            cube([145,80,1],center=true);
     }
     
     // open area after stepper mount plate
     hull() {
         translate([0,0,27-4]) rotate([90,0,0])
-            pairX(16) cylinder(r=4,h=100,center=true,$fn=RES);
-        pairX(20) translate([0,0,3.9+4]) rotate([90,0,0])
+            pairX(8) cylinder(r=4,h=100,center=true,$fn=RES);
+        pairX(18) for(z=[4,8]) translate([0,0,3.9+z]) rotate([90,0,0])
             cylinder(r=4, h=80,center=true, $fn=RES);
     }
 }
@@ -48,20 +48,27 @@ module vertex() difference() {
     
     atNema17() {
         %nema17();
-        translate([0,0,-1]) nema17holes();
-        translate([0,0,20]) onNema17mountHoles()
+        translate([0,0,-1]) nema17holes(); // motor bolts
+        
+        // access holes for motor bolts
+        // current design, we don't need clearance for
+        // upper bolts, but we do for bottom
+        translate([0,0,20]) difference() { onNema17mountHoles()
             cylinder(d1=3,d2=6,h=40,$fn=RES/2);
-        //scale([1,1,2]) difference()
-         //   { nema17holes();
-         //     cylinder(d=28,$fn=6,h=80,center=true); }
+            translate([0,-15,20]) cube([40,10,60],center=true);
+        }
+        
 
         %translate([0,0,23.4]) rotate([180,0,0]) toothedPulley();
         %translate([0,0,3.5]) cube([20,10,7],center=true);  // show typical spacing of pulley from mount face
         
         stepperClearance();  // clearnce to mount stepper
         
-        // inside bolt to tower
-        translate([0,25,15]) cylinder(d=M5diam+.15,h=30,$fn=RES/2);
+        // inside bolts to tower
+        // if we move motor mounts down, we could fit a bolt
+        // above the toothed pulley, perhaps at z=-15
+        for(z=[25]) translate([0,z,15])
+            cylinder(d=M5diam+.15,h=30,$fn=RES/2);
     }
 
     // sideways bolts on tower
@@ -87,8 +94,14 @@ module baseRailBoltHoles() {
         translate([0,0,-10-6]) rotate([180,0,0])
             cylinder(d1=M3head-.05,d2=M3head+2,h=20,$fn=RES/2);
     }
-    for (d=[100,145]) onRailCA(d) rotate([0,90,-30]) {
+    // flat area parallel to rail for washers
+    onRailCA(100) rotate([0,90,-30]) {
         cylinder(d=3,h=20,$fn=RES/2);
+        translate([0,0,17.6]) cylinder(d1=12,d2=18,h=8,$fn=RES);
+    }
+    onRailCA(145) rotate([0,90,-30]) {
+        cylinder(d=3,h=20,$fn=RES/2);
+        translate([0,0,15.3]) cylinder(d1=12,d2=18,h=8,$fn=RES);
     }
     
     // make extra indentations for nut insertion

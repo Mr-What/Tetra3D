@@ -9,6 +9,7 @@ TowerExtLen = 1500;  // length of extrusion
 TowerRadius = 310; // at z==0 to center of extrusion
 BaseRailHeight = 60;
 dBaseRail = 16;  // center of base rail this far outside the tower base triangle
+zApex =1458; // apex height above table
 
 module ext20(len,kerf=.08) linear_extrude(len) ext2020cutOutProfile(kerf);
 
@@ -20,6 +21,8 @@ M3head = 5.36;
 module pairX(d) for(a=[-d,d]) translate([a,0,0]) children();
 module pairY(d) for(a=[-d,d]) translate([0,a,0]) children();
 module pairZ(d) for(a=[-d,d]) translate([0,0,a]) children();
+module mirrorX(d=0) { translate([d,0,0]) children();
+      mirror([1,0,0]) translate([d,0,0]) children(); }
 module mirrorZ(d=0) { translate([0,0,d]) children();
       mirror([0,0,1]) translate([0,0,d]) children(); }
 
